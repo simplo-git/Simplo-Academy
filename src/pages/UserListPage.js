@@ -6,11 +6,13 @@ import './static/css/HomePage.css'; // Reusing standard layout styles
 const UserListPage = () => {
     const navigate = useNavigate();
     const [users, setUsers] = useState([]);
+    const [roles, setRoles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
     useEffect(() => {
         fetchUsers();
+        fetchRoles();
     }, []);
 
     const fetchUsers = async () => {
@@ -27,6 +29,18 @@ const UserListPage = () => {
             setError('Server connection error');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchRoles = async () => {
+        try {
+            const response = await fetch('http://127.0.0.1:5000/api/roles');
+            if (response.ok) {
+                const data = await response.json();
+                setRoles(data);
+            }
+        } catch (err) {
+            console.error('Erro ao buscar setores:', err);
         }
     };
 
@@ -102,7 +116,9 @@ const UserListPage = () => {
                                         </td>
                                         <td style={{ padding: '10px 15px' }}>{user.nome}</td>
                                         <td style={{ padding: '10px 15px' }}>{user.email}</td>
-                                        <td style={{ padding: '10px 15px' }}>{user.setor}</td>
+                                        <td style={{ padding: '10px 15px' }}>
+                                            {roles.find(role => role._id === user.setor)?.nome || user.setor}
+                                        </td>
                                         <td style={{ padding: '10px 15px' }}>{user.cargo}</td>
                                         <td style={{ padding: '10px 15px' }}>{user.tipo}</td>
                                         <td style={{ padding: '10px 15px' }}>
@@ -131,6 +147,22 @@ const UserListPage = () => {
                                                 }}
                                             >
                                                 Editar
+                                            </button>
+                                            <button
+                                                onClick={() => navigate(`/profile/${user._id}`)}
+                                                style={{
+                                                    padding: '5px 10px',
+                                                    backgroundColor: 'transparent',
+                                                    color: '#28a745',
+                                                    border: '1px solid #28a745',
+                                                    borderRadius: '4px',
+                                                    cursor: 'pointer',
+                                                    fontSize: '0.85em',
+                                                    marginRight: '10px'
+                                                }}
+                                                title="Ver Perfil"
+                                            >
+                                                👁️
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(user._id)}

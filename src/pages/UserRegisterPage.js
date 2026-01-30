@@ -28,9 +28,14 @@ const UserRegisterPage = () => {
     const [success, setSuccess] = useState('');
 
     const [roles, setRoles] = useState([]);
+    const [availableCerts, setAvailableCerts] = useState([]);
+    const [selectedCert, setSelectedCert] = useState('');
+    const [certDate, setCertDate] = useState('');
+    const [isCertModalOpen, setIsCertModalOpen] = useState(false);
 
     useEffect(() => {
         fetchRoles();
+        fetchCertificates();
         if (isEditMode) {
             fetchUser();
         }
@@ -45,6 +50,18 @@ const UserRegisterPage = () => {
             }
         } catch (err) {
             console.error('Erro ao buscar setores:', err);
+        }
+    };
+
+    const fetchCertificates = async () => {
+        try {
+            const response = await fetch('http://127.0.0.1:5000/api/certificates');
+            if (response.ok) {
+                const data = await response.json();
+                setAvailableCerts(data);
+            }
+        } catch (err) {
+            console.error('Erro ao buscar certificados:', err);
         }
     };
 
@@ -126,6 +143,39 @@ const UserRegisterPage = () => {
             };
             reader.readAsDataURL(file);
         }
+    };
+
+    const handleAddCertificate = () => {
+        if (!selectedCert || !certDate) {
+            alert('Selecione um certificado e a data de conclusão.');
+            return;
+        }
+
+        const newCert = {
+            certificate: selectedCert, // Save ID
+            data_conclusao: certDate
+        };
+
+        // Prevent duplicates (optional, but good UX)
+        if (formData.certificados.some(c => c.certificate === selectedCert)) {
+            alert('Este certificado já foi adicionado.');
+            return;
+        }
+
+        setFormData(prev => ({
+            ...prev,
+            certificados: [...prev.certificados, newCert]
+        }));
+
+        setSelectedCert('');
+        setCertDate('');
+    };
+
+    const handleRemoveCertificate = (certId) => {
+        setFormData(prev => ({
+            ...prev,
+            certificados: prev.certificados.filter(c => c.certificate !== certId)
+        }));
     };
 
     const handleSubmit = async (e) => {
@@ -261,6 +311,27 @@ const UserRegisterPage = () => {
                                         />
                                     </div>
                                     <input type="hidden" name="foto" value={formData.foto} />
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsCertModalOpen(true)}
+                                        style={{
+                                            marginTop: '15px',
+                                            width: '100%',
+                                            padding: '10px',
+                                            backgroundColor: '#6c757d',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '8px'
+                                        }}
+                                    >
+                                        <span>🏅</span> Gerenciar Certificações
+                                    </button>
                                 </div>
                             </div>
 
@@ -304,6 +375,7 @@ const UserRegisterPage = () => {
                                         <option value="inativo">Inativo</option>
                                     </select>
                                 </div>
+                                {/* Removed inline certificate section */}
                                 <div>
                                     <label style={labelStyle}>Senha {isEditMode && '(Deixe em branco para manter)'}</label>
                                     <input type="password" name="password" value={formData.password} onChange={handleChange} required={!isEditMode} style={inputStyle} />
@@ -346,6 +418,145 @@ const UserRegisterPage = () => {
                     </form>
                 </div>
             </main>
+
+            {/* Certificate Management Modal */}
+            {isCertModalOpen && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 1000
+                }}>
+                    <div style={{
+                        backgroundColor: 'white',
+                        padding: '25px',
+                        borderRadius: '8px',
+                        width: '500px',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                        maxHeight: '80vh',
+                        overflowY: 'auto'
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                            <h3 style={{ margin: 0 }}>Gerenciar Certificações</h3>
+                            <button
+                                onClick={() => setIsCertModalOpen(false)}
+                                style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}
+                            >
+                                &times;
+                            </button>
+                        </div>
+
+                        {/* Add New Certificate Section */}
+                        <div style={{ backgroundColor: '#f8f9fa', padding: '15px', borderRadius: '6px', marginBottom: '20px' }}>
+                            <h4 style={{ marginTop: 0, marginBottom: '10px', fontSize: '0.9rem' }}>Adicionar Nova</h4>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                <select
+                                    value={selectedCert}
+                                    onChange={(e) => setSelectedCert(e.target.value)}
+                                    style={inputStyle}
+                                >
+                                    <option value="">Selecione um certificado...</option>
+                                    {availableCerts.map(cert => (
+                                        <option key={cert._id} value={cert._id}>{cert.nome}</option>
+                                    ))}
+                                </select>
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <input
+                                        type="date"
+                                        value={certDate}
+                                        onChange={(e) => setCertDate(e.target.value)}
+                                        style={{ ...inputStyle, marginBottom: 0, flex: 1 }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={handleAddCertificate}
+                                        style={{
+                                            backgroundColor: '#28a745',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            padding: '10px 20px',
+                                            cursor: 'pointer',
+                                            fontWeight: 'bold'
+                                        }}
+                                    >
+                                        Adicionar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* List of Assigned Certificates */}
+                        <div>
+                            <h4 style={{ marginTop: 0, marginBottom: '10px', fontSize: '0.9rem' }}>Certificações Atribuídas: {formData.certificados?.length || 0}</h4>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                {formData.certificados && formData.certificados.length > 0 ? (
+                                    formData.certificados.map((certItem, index) => {
+                                        const certDetails = availableCerts.find(c => c._id === certItem.certificate);
+                                        return (
+                                            <div key={index} style={{
+                                                border: '1px solid #ddd',
+                                                borderRadius: '6px',
+                                                padding: '10px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '15px',
+                                                backgroundColor: 'white'
+                                            }}>
+                                                {certDetails?.link ? (
+                                                    <img src={certDetails.link} alt="Badge" style={{ width: '50px', height: '50px', borderRadius: '4px', objectFit: 'cover' }} />
+                                                ) : (
+                                                    <div style={{ width: '50px', height: '50px', borderRadius: '4px', backgroundColor: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>🏆</div>
+                                                )}
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ fontWeight: 'bold' }}>{certDetails?.nome || 'Desconhecido'}</div>
+                                                    <div style={{ fontSize: '0.85em', color: '#666' }}>Concluído em: {certItem.data_conclusao}</div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoveCertificate(certItem.certificate)}
+                                                    style={{
+                                                        background: 'none',
+                                                        border: 'none',
+                                                        color: '#dc3545',
+                                                        cursor: 'pointer',
+                                                        padding: '5px'
+                                                    }}
+                                                    title="Remover"
+                                                >
+                                                    <span style={{ fontSize: '1.2rem' }}>🗑️</span>
+                                                </button>
+                                            </div>
+                                        );
+                                    })
+                                ) : (
+                                    <p style={{ color: '#888', textAlign: 'center', fontStyle: 'italic' }}>Nenhuma certificação atribuída.</p>
+                                )}
+                            </div>
+                        </div>
+
+                        <div style={{ marginTop: '20px', textAlign: 'right' }}>
+                            <button
+                                type="button"
+                                onClick={() => setIsCertModalOpen(false)}
+                                style={{
+                                    padding: '8px 16px',
+                                    backgroundColor: '#007bff',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Concluído
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -41,7 +41,15 @@ const Header = () => {
             <div className="user-menu-container">
                 <div id="btn-user-menu" onClick={() => setIsMenuOpen(!isMenuOpen)}>
                     <div className="user-avatar">
-                        {getUserInitials(user?.nome)}
+                        {user?.foto ? (
+                            <img
+                                src={user.foto}
+                                alt="Profile"
+                                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                            />
+                        ) : (
+                            getUserInitials(user?.nome)
+                        )}
                     </div>
                     <span>{user?.nome || 'Usuário'}</span>
                     <span style={{ fontSize: '0.8em', transform: isMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s' }}>▼</span>
@@ -71,7 +79,7 @@ const Header = () => {
                             </span>
                             Setores
                         </div>
-                        <div className="dropdown-item">
+                        <div className="dropdown-item" onClick={() => navigate('/content')}>
                             <span className="dropdown-icon">
                                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
                                     <path d="M22 10v6M2 10l10-5 10 5-10 5-10-5z" />
@@ -80,7 +88,7 @@ const Header = () => {
                             </span>
                             Adicionar Conteúdo
                         </div>
-                        <div className="dropdown-item">
+                        <div className="dropdown-item" onClick={() => navigate('/certificates')}>
                             <span className="dropdown-icon">
                                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
                                     <circle cx="12" cy="8" r="7" />
@@ -89,7 +97,7 @@ const Header = () => {
                             </span>
                             Certificações
                         </div>
-                        <div className="dropdown-item">
+                        <div className="dropdown-item" onClick={() => user && navigate(`/profile/${user.id || user._id}`)}>
                             <span className="dropdown-icon">
                                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
                                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
