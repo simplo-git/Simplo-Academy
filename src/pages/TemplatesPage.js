@@ -107,7 +107,38 @@ const TemplatesPage = () => {
             <Header />
             <main className="main-content">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <h2 style={{ color: '#333' }}>Templates de Atividades</h2>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <button
+                            onClick={() => navigate('/content')}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                width: '40px',
+                                height: '40px',
+                                borderRadius: '50%',
+                                border: '1px solid #ddd',
+                                backgroundColor: 'white',
+                                cursor: 'pointer',
+                                color: '#555',
+                                fontSize: '1.2rem',
+                                transition: 'all 0.2s',
+                                boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
+                            }}
+                            title="Voltar para Conteúdos"
+                            onMouseOver={(e) => {
+                                e.currentTarget.style.backgroundColor = '#f5f5f5';
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                            }}
+                            onMouseOut={(e) => {
+                                e.currentTarget.style.backgroundColor = 'white';
+                                e.currentTarget.style.transform = 'translateY(0)';
+                            }}
+                        >
+                            ⬅
+                        </button>
+                        <h2 style={{ color: '#333', margin: 0 }}>Templates de Atividades</h2>
+                    </div>
                     <button
                         onClick={() => navigate('/templates/new')}
                         style={{

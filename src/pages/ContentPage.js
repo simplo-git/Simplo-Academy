@@ -1,27 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from './static/components/Header';
+import ContentWizard from './static/components/ContentWizard';
 import './static/css/HomePage.css'; // Reusing standard layout styles
 
 const ContentPage = () => {
     const navigate = useNavigate();
     const [contents, setContents] = useState([]);
+    const [roles, setRoles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingContent, setEditingContent] = useState(null);
-    const [formData, setFormData] = useState({
-        titulo: '',
-        descricao: '',
-        tipo: 'video',
-        url: '',
-        duracao: ''
-    });
+    const [isWizardOpen, setIsWizardOpen] = useState(false);
 
     // Fetch Contents
     const fetchContents = async () => {
         try {
-            const response = await fetch('http://127.0.0.1:5000/api/contents');
+            const response = await fetch('http://127.0.0.1:5000/api/conteudos');
             if (response.ok) {
                 const data = await response.json();
                 setContents(data);
@@ -38,65 +32,29 @@ const ContentPage = () => {
 
     useEffect(() => {
         fetchContents();
+        fetchRoles();
     }, []);
 
-    const handleOpenModal = (content = null) => {
-        if (content) {
-            setEditingContent(content);
-            setFormData({
-                titulo: content.titulo || '',
-                descricao: content.descricao || '',
-                tipo: content.tipo || 'video',
-                url: content.url || '',
-                duracao: content.duracao || ''
-            });
-        } else {
-            setEditingContent(null);
-            setFormData({ titulo: '', descricao: '', tipo: 'video', url: '', duracao: '' });
+    const fetchRoles = async () => {
+        try {
+            const response = await fetch('http://127.0.0.1:5000/api/roles');
+            if (response.ok) {
+                const data = await response.json();
+                setRoles(data);
+            }
+        } catch (err) {
+            console.error('Erro ao carregar roles:', err);
         }
-        setIsModalOpen(true);
-    };
-
-    const handleCloseModal = () => {
-        setIsModalOpen(false);
-        setEditingContent(null);
-        setFormData({ titulo: '', descricao: '', tipo: 'video', url: '', duracao: '' });
     };
 
     const handleOpenTemplateModal = () => {
         navigate('/templates');
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        const url = editingContent
-            ? `http://127.0.0.1:5000/api/contents/${editingContent._id}`
-            : 'http://127.0.0.1:5000/api/contents';
-        const method = editingContent ? 'PUT' : 'POST';
-
-        try {
-            const response = await fetch(url, {
-                method: method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
-            });
-
-            if (response.ok) {
-                handleCloseModal();
-                fetchContents(); // Refresh list
-            } else {
-                alert('Erro ao salvar conteúdo');
-            }
-        } catch (err) {
-            console.error(err);
-            alert('Erro de conexão');
-        }
-    };
-
     const handleDelete = async (id) => {
         if (window.confirm('Tem certeza que deseja excluir este conteúdo?')) {
             try {
-                const response = await fetch(`http://127.0.0.1:5000/api/contents/${id}`, {
+                const response = await fetch(`http://127.0.0.1:5000/api/conteudos/${id}`, {
                     method: 'DELETE'
                 });
                 if (response.ok) {
@@ -112,13 +70,12 @@ const ContentPage = () => {
     };
 
     const getTipoLabel = (tipo) => {
-        const tipos = {
-            'video': 'Vídeo',
-            'documento': 'Documento',
-            'imagem': 'Imagem',
-            'link': 'Link Externo'
-        };
-        return tipos[tipo] || tipo;
+        // Fallback for new structure where 'tipo' might not exist directly on the content,
+        // or getting it from the first template?
+        // The new model doesn't explicitly have a 'tipo' field (it has 'conteudos').
+        // We can show 'Mix' or just the correction type?
+        // Let's rely on 'correcao' or just 'nivel'.
+        return tipo || '-';
     };
 
     return (
@@ -126,10 +83,10 @@ const ContentPage = () => {
             <Header />
             <main className="main-content">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <h2 style={{ color: '#333' }}>Adicionar Conteúdo</h2>
+                    <h2 style={{ color: '#333' }}>Central de Conteúdos</h2>
                     <div style={{ display: 'flex', gap: '10px' }}>
                         <button
-                            onClick={() => handleOpenModal()}
+                            onClick={() => setIsWizardOpen(true)}
                             style={{
                                 padding: '10px 20px',
                                 backgroundColor: '#007bff',
@@ -137,10 +94,11 @@ const ContentPage = () => {
                                 border: 'none',
                                 borderRadius: '4px',
                                 cursor: 'pointer',
-                                fontWeight: 'bold'
+                                fontWeight: 'bold',
+                                boxShadow: '0 4px 6px rgba(0,123,255,0.2)'
                             }}
                         >
-                            + Adicionar
+                            + Adicionar Conteúdo
                         </button>
                         <button
                             onClick={handleOpenTemplateModal}
@@ -154,7 +112,7 @@ const ContentPage = () => {
                                 fontWeight: 'bold'
                             }}
                         >
-                            📋 Criar Templates
+                            📋 Gerenciar Templates
                         </button>
                     </div>
                 </div>
@@ -167,49 +125,57 @@ const ContentPage = () => {
                         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                             <thead style={{ backgroundColor: '#f4f6f8', borderBottom: '2px solid #ddd' }}>
                                 <tr>
-                                    <th style={{ padding: '15px' }}>Título</th>
-                                    <th style={{ padding: '15px' }}>Tipo</th>
-                                    <th style={{ padding: '15px' }}>Duração</th>
+                                    <th style={{ padding: '15px' }}>Nome</th>
+                                    <th style={{ padding: '15px' }}>Nível</th>
+                                    <th style={{ padding: '15px' }}>Correção</th>
+                                    <th style={{ padding: '15px' }}>Alunos</th>
                                     <th style={{ padding: '15px', width: '150px' }}>Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {contents.length === 0 ? (
                                     <tr>
-                                        <td colSpan="4" style={{ padding: '20px', textAlign: 'center', color: '#888' }}>
+                                        <td colSpan="5" style={{ padding: '40px', textAlign: 'center', color: '#888' }}>
+                                            <div style={{ fontSize: '1.5rem', marginBottom: '10px' }}>📭</div>
                                             Nenhum conteúdo cadastrado.
                                         </td>
                                     </tr>
                                 ) : (
                                     contents.map(content => (
                                         <tr key={content._id} style={{ borderBottom: '1px solid #eee' }}>
-                                            <td style={{ padding: '15px' }}>{content.titulo}</td>
+                                            <td style={{ padding: '15px' }}>
+                                                <div style={{ fontWeight: '600', color: '#333' }}>{content.nome}</div>
+                                                <div style={{ fontSize: '0.85rem', color: '#777' }}>
+                                                    {content.setores && content.setores.length > 0
+                                                        ? content.setores.map(s => {
+                                                            if (typeof s === 'object') return s.nome || s.id || JSON.stringify(s); // Handle object safe
+                                                            return roles.find(r => r._id === s)?.nome || s;
+                                                        }).join(', ')
+                                                        : (content.setor && typeof content.setor === 'object' ? content.setor.nome : content.setor) || '-'}
+                                                </div>
+                                            </td>
                                             <td style={{ padding: '15px' }}>
                                                 <span style={{
-                                                    padding: '4px 8px',
-                                                    borderRadius: '4px',
-                                                    backgroundColor: content.tipo === 'video' ? '#e3f2fd' :
-                                                        content.tipo === 'documento' ? '#fff3e0' :
-                                                            content.tipo === 'imagem' ? '#e8f5e9' : '#f3e5f5',
-                                                    color: content.tipo === 'video' ? '#1976d2' :
-                                                        content.tipo === 'documento' ? '#e65100' :
-                                                            content.tipo === 'imagem' ? '#388e3c' : '#7b1fa2',
-                                                    fontSize: '0.85rem'
+                                                    padding: '4px 10px',
+                                                    borderRadius: '12px',
+                                                    backgroundColor: '#e3f2fd',
+                                                    color: '#1976d2',
+                                                    fontSize: '0.85rem',
+                                                    fontWeight: '600'
                                                 }}>
-                                                    {getTipoLabel(content.tipo)}
+                                                    Nível {content.nivel}
                                                 </span>
                                             </td>
-                                            <td style={{ padding: '15px' }}>{content.duracao || '-'}</td>
+                                            <td style={{ padding: '15px' }}>
+                                                {content.correcao === 'automatica' ? '🤖 Automática' : '✍️ Manual'}
+                                            </td>
+                                            <td style={{ padding: '15px' }}>
+                                                {content.usuarios ? Object.keys(content.usuarios).length : 0}
+                                            </td>
                                             <td style={{ padding: '15px' }}>
                                                 <button
-                                                    onClick={() => handleOpenModal(content)}
-                                                    style={{ marginRight: '10px', background: 'none', border: 'none', color: '#007bff', cursor: 'pointer' }}
-                                                >
-                                                    Editar
-                                                </button>
-                                                <button
                                                     onClick={() => handleDelete(content._id)}
-                                                    style={{ background: 'none', border: 'none', color: '#dc3545', cursor: 'pointer' }}
+                                                    style={{ background: 'none', border: 'none', color: '#dc3545', cursor: 'pointer', fontWeight: '500' }}
                                                 >
                                                     Excluir
                                                 </button>
@@ -222,144 +188,15 @@ const ContentPage = () => {
                     </div>
                 )}
 
-                {/* Modal Adicionar/Editar Conteúdo */}
-                {isModalOpen && (
-                    <div style={{
-                        position: 'fixed',
-                        top: 0, left: 0, right: 0, bottom: 0,
-                        backgroundColor: 'rgba(0,0,0,0.5)',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        zIndex: 1000
-                    }}>
-                        <div style={{
-                            backgroundColor: 'white',
-                            padding: '25px',
-                            borderRadius: '8px',
-                            width: '500px',
-                            maxHeight: '80vh',
-                            overflowY: 'auto',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
-                        }}>
-                            <h3 style={{ marginTop: 0 }}>{editingContent ? 'Editar Conteúdo' : 'Novo Conteúdo'}</h3>
-                            <form onSubmit={handleSubmit}>
-                                <div style={{ marginBottom: '15px' }}>
-                                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Título</label>
-                                    <input
-                                        type="text"
-                                        value={formData.titulo}
-                                        onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
-                                        required
-                                        style={{
-                                            width: '100%',
-                                            padding: '8px',
-                                            borderRadius: '4px',
-                                            border: '1px solid #ddd',
-                                            boxSizing: 'border-box'
-                                        }}
-                                    />
-                                </div>
-                                <div style={{ marginBottom: '15px' }}>
-                                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Descrição</label>
-                                    <textarea
-                                        value={formData.descricao}
-                                        onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                                        rows={3}
-                                        style={{
-                                            width: '100%',
-                                            padding: '8px',
-                                            borderRadius: '4px',
-                                            border: '1px solid #ddd',
-                                            boxSizing: 'border-box',
-                                            resize: 'vertical'
-                                        }}
-                                    />
-                                </div>
-                                <div style={{ marginBottom: '15px' }}>
-                                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Tipo</label>
-                                    <select
-                                        value={formData.tipo}
-                                        onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
-                                        style={{
-                                            width: '100%',
-                                            padding: '8px',
-                                            borderRadius: '4px',
-                                            border: '1px solid #ddd',
-                                            boxSizing: 'border-box'
-                                        }}
-                                    >
-                                        <option value="video">Vídeo</option>
-                                        <option value="documento">Documento</option>
-                                        <option value="imagem">Imagem</option>
-                                        <option value="link">Link Externo</option>
-                                    </select>
-                                </div>
-                                <div style={{ marginBottom: '15px' }}>
-                                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>URL do Conteúdo</label>
-                                    <input
-                                        type="text"
-                                        value={formData.url}
-                                        onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-                                        placeholder="https://..."
-                                        style={{
-                                            width: '100%',
-                                            padding: '8px',
-                                            borderRadius: '4px',
-                                            border: '1px solid #ddd',
-                                            boxSizing: 'border-box'
-                                        }}
-                                    />
-                                </div>
-                                <div style={{ marginBottom: '15px' }}>
-                                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Duração (ex: 10min, 1h)</label>
-                                    <input
-                                        type="text"
-                                        value={formData.duracao}
-                                        onChange={(e) => setFormData({ ...formData, duracao: e.target.value })}
-                                        placeholder="Ex: 30min"
-                                        style={{
-                                            width: '100%',
-                                            padding: '8px',
-                                            borderRadius: '4px',
-                                            border: '1px solid #ddd',
-                                            boxSizing: 'border-box'
-                                        }}
-                                    />
-                                </div>
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                                    <button
-                                        type="button"
-                                        onClick={handleCloseModal}
-                                        style={{
-                                            padding: '8px 16px',
-                                            background: '#ddd',
-                                            border: 'none',
-                                            borderRadius: '4px',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        Cancelar
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        style={{
-                                            padding: '8px 16px',
-                                            background: '#007bff',
-                                            color: 'white',
-                                            border: 'none',
-                                            borderRadius: '4px',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        Salvar
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+                {/* Wizard Modal */}
+                {isWizardOpen && (
+                    <ContentWizard
+                        onClose={() => setIsWizardOpen(false)}
+                        onSuccess={() => {
+                            fetchContents();
+                        }}
+                    />
                 )}
-
 
             </main>
         </div>
@@ -367,3 +204,4 @@ const ContentPage = () => {
 };
 
 export default ContentPage;
+
