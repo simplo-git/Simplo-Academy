@@ -174,7 +174,7 @@ const UserRegisterPage = () => {
     const handleRemoveCertificate = (certId) => {
         setFormData(prev => ({
             ...prev,
-            certificados: prev.certificados.filter(c => c.certificate !== certId)
+            certificados: prev.certificados.filter(c => (c.id || c.certificate) !== certId)
         }));
     };
 
@@ -495,7 +495,9 @@ const UserRegisterPage = () => {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                 {formData.certificados && formData.certificados.length > 0 ? (
                                     formData.certificados.map((certItem, index) => {
-                                        const certDetails = availableCerts.find(c => c._id === certItem.certificate);
+                                        // Handle both 'id' (new) and 'certificate' (legacy) keys
+                                        const certId = certItem.id || certItem.certificate;
+                                        const certDetails = availableCerts.find(c => c._id === certId);
                                         return (
                                             <div key={index} style={{
                                                 border: '1px solid #ddd',
@@ -506,8 +508,8 @@ const UserRegisterPage = () => {
                                                 gap: '15px',
                                                 backgroundColor: 'white'
                                             }}>
-                                                {certDetails?.link ? (
-                                                    <img src={certDetails.link} alt="Badge" style={{ width: '50px', height: '50px', borderRadius: '4px', objectFit: 'cover' }} />
+                                                {certDetails?.insignia ? (
+                                                    <img src={certDetails.insignia} alt="Badge" style={{ width: '50px', height: '50px', borderRadius: '4px', objectFit: 'cover' }} />
                                                 ) : (
                                                     <div style={{ width: '50px', height: '50px', borderRadius: '4px', backgroundColor: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>🏆</div>
                                                 )}

@@ -17,7 +17,7 @@
 
 .wizard-container {
     background-color: #ffffff;
-    width: 800px;
+    width: 1800px;
     max-width: 95vw;
     height: 85vh;
     /* Fixed height for consistency */
@@ -32,7 +32,7 @@
 
 /* Header */
 .wizard-header {
-    padding: 24px 32px;
+    padding: 10px 20px;
     border-bottom: 1px solid #f0f0f0;
     display: flex;
     justify-content: space-between;
@@ -65,7 +65,7 @@
 }
 
 .wizard-close:hover {
-    background-color: #f0f0f0;
+    background-color: #ffffff;
     color: #333;
     transform: rotate(90deg);
 }
@@ -73,7 +73,7 @@
 /* Steps Progress */
 .wizard-progress {
     padding: 20px 32px;
-    background-color: #fbfbfc;
+    background-color: #ffffff;
     border-bottom: 1px solid #eee;
     display: flex;
     justify-content: space-between;
@@ -93,7 +93,7 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background-color: #e0e0e0;
+    background-color: #ffffff;
     color: #777;
     display: flex;
     align-items: center;
@@ -148,7 +148,7 @@
     flex: 1;
     padding: 32px;
     overflow-y: auto;
-    background-color: #fafafa;
+    background-color: #ffffff;
     position: relative;
 }
 

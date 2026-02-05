@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from './static/components/Header';
 import ContentWizard from './static/components/ContentWizard';
+import ContentTrackingModal from './static/components/ContentTrackingModal';
 import './static/css/HomePage.css'; // Reusing standard layout styles
 
 const ContentPage = () => {
@@ -11,6 +12,8 @@ const ContentPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [isWizardOpen, setIsWizardOpen] = useState(false);
+    const [editingContent, setEditingContent] = useState(null);
+    const [trackingContent, setTrackingContent] = useState(null); // State for tracking modal
 
     // Fetch Contents
     const fetchContents = async () => {
@@ -51,6 +54,16 @@ const ContentPage = () => {
         navigate('/templates');
     };
 
+    const handleEdit = (content) => {
+        setEditingContent(content);
+        setIsWizardOpen(true);
+    };
+
+    const handleCloseWizard = () => {
+        setIsWizardOpen(false);
+        setEditingContent(null);
+    };
+
     const handleDelete = async (id) => {
         if (window.confirm('Tem certeza que deseja excluir este conteúdo?')) {
             try {
@@ -86,7 +99,7 @@ const ContentPage = () => {
                     <h2 style={{ color: '#333' }}>Central de Conteúdos</h2>
                     <div style={{ display: 'flex', gap: '10px' }}>
                         <button
-                            onClick={() => setIsWizardOpen(true)}
+                            onClick={() => { setEditingContent(null); setIsWizardOpen(true); }}
                             style={{
                                 padding: '10px 20px',
                                 backgroundColor: '#007bff',
@@ -129,7 +142,7 @@ const ContentPage = () => {
                                     <th style={{ padding: '15px' }}>Nível</th>
                                     <th style={{ padding: '15px' }}>Correção</th>
                                     <th style={{ padding: '15px' }}>Alunos</th>
-                                    <th style={{ padding: '15px', width: '150px' }}>Ações</th>
+                                    <th style={{ padding: '15px', width: '280px' }}>Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -174,6 +187,18 @@ const ContentPage = () => {
                                             </td>
                                             <td style={{ padding: '15px' }}>
                                                 <button
+                                                    onClick={() => setTrackingContent(content)}
+                                                    style={{ marginRight: '10px', background: 'none', border: 'none', color: '#28a745', cursor: 'pointer', fontWeight: '500' }}
+                                                >
+                                                    Acompanhar
+                                                </button>
+                                                <button
+                                                    onClick={() => handleEdit(content)}
+                                                    style={{ marginRight: '10px', background: 'none', border: 'none', color: '#007bff', cursor: 'pointer', fontWeight: '500' }}
+                                                >
+                                                    Editar
+                                                </button>
+                                                <button
                                                     onClick={() => handleDelete(content._id)}
                                                     style={{ background: 'none', border: 'none', color: '#dc3545', cursor: 'pointer', fontWeight: '500' }}
                                                 >
@@ -191,10 +216,19 @@ const ContentPage = () => {
                 {/* Wizard Modal */}
                 {isWizardOpen && (
                     <ContentWizard
-                        onClose={() => setIsWizardOpen(false)}
+                        onClose={handleCloseWizard}
                         onSuccess={() => {
                             fetchContents();
                         }}
+                        initialData={editingContent}
+                    />
+                )}
+
+                {/* Tracking Modal */}
+                {trackingContent && (
+                    <ContentTrackingModal
+                        content={trackingContent}
+                        onClose={() => setTrackingContent(null)}
                     />
                 )}
 
@@ -204,4 +238,5 @@ const ContentPage = () => {
 };
 
 export default ContentPage;
+
 

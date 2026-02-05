@@ -10,7 +10,7 @@ const STEPS = [
     { id: 6, label: 'Certificado' }
 ];
 
-const ContentWizard = ({ onClose, onSuccess }) => {
+const ContentWizard = ({ onClose, onSuccess, initialData }) => {
     const [currentStep, setCurrentStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -32,6 +32,35 @@ const ContentWizard = ({ onClose, onSuccess }) => {
     const [roles, setRoles] = useState([]); // New state for roles/sectors
     const [certificates, setCertificates] = useState([]); // New state for certificates
     const [loadingData, setLoadingData] = useState(false);
+
+    // Initial Data Effect
+    useEffect(() => {
+        if (initialData) {
+            // Helper to extract IDs from various formats (array of strings, array of objects with _id or id)
+            const extractIds = (list) => {
+                if (!list || !Array.isArray(list)) return [];
+                return list.map(item => {
+                    if (typeof item === 'object' && item !== null) {
+                        return item._id || item.id;
+                    }
+                    return item;
+                }).filter(Boolean); // Remove null/undefined
+            };
+
+            const mappedSetores = extractIds(initialData.setores || initialData.setor);
+
+            setFormData({
+                nome: initialData.nome || '',
+                descricao: initialData.descricao || '',
+                setores: mappedSetores,
+                conteudos: initialData.conteudos ? extractIds(initialData.conteudos) : [],
+                nivel: initialData.nivel || 1,
+                usuarios: initialData.usuarios || {},
+                correcao: initialData.correcao || 'manual',
+                certificado_id: initialData.certificado_id || null
+            });
+        }
+    }, [initialData]);
 
     // Fetch Templates, Users, Roles, and Certificates on mount
     useEffect(() => {
@@ -65,7 +94,11 @@ const ContentWizard = ({ onClose, onSuccess }) => {
 
     // Auto-Select Users based on Level and Sectors
     useEffect(() => {
-        if (currentStep === 4) {
+        // Only run auto-select logic if NOT in edit mode OR if explicitly changing steps/level
+        // Ideally, we don't want to overwrite existing user selections in edit mode unless the user changes sectors/level
+        // But for simplicity, we let the user modify manually if needed.
+
+        if (currentStep === 4 && !initialData) { // Added !initialData check to prevent overwriting on load
             const filteredUsers = users.filter(u => formData.setores.includes(u.setor));
 
             if (formData.nivel === 1 || formData.nivel === 2) {
@@ -83,11 +116,13 @@ const ContentWizard = ({ onClose, onSuccess }) => {
                 // Lvl 3/4: System asks (= manual). Ensure we don't carry over auto-selected ones if moving from Lvl 1->3
                 // We'll reset if it matches the full list (heuristic for auto-selected)
                 if (Object.keys(formData.usuarios).length === filteredUsers.length && filteredUsers.length > 0) {
-                    setFormData(prev => ({ ...prev, usuarios: {} }));
+                    // Check if not empty before clearing
+                    if (Object.keys(formData.usuarios).length > 0)
+                        setFormData(prev => ({ ...prev, usuarios: {} }));
                 }
             }
         }
-    }, [currentStep, formData.nivel, formData.setores, users]);
+    }, [currentStep, formData.nivel, formData.setores, users, initialData]);
 
     // Validate Correction Type
     useEffect(() => {
@@ -114,8 +149,14 @@ const ContentWizard = ({ onClose, onSuccess }) => {
     const handleSubmit = async () => {
         setIsSubmitting(true);
         try {
-            const response = await fetch('http://127.0.0.1:5000/api/conteudos', {
-                method: 'POST',
+            const url = initialData
+                ? `http://127.0.0.1:5000/api/conteudos/${initialData._id}`
+                : 'http://127.0.0.1:5000/api/conteudos';
+
+            const method = initialData ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
             });
@@ -125,7 +166,7 @@ const ContentWizard = ({ onClose, onSuccess }) => {
                 onClose();
             } else {
                 const errData = await response.json();
-                alert(`Erro ao criar conteúdo: ${errData.message || 'Erro desconhecido'}`);
+                alert(`Erro ao ${initialData ? 'atualizar' : 'criar'} conteúdo: ${errData.message || 'Erro desconhecido'}`);
             }
         } catch (error) {
             console.error(error);
@@ -367,25 +408,64 @@ const ContentWizard = ({ onClose, onSuccess }) => {
     const renderStep4 = () => {
         // Filter users by selected sectors
         const filteredUsers = users.filter(u => formData.setores.includes(u.setor));
+        const selectedUserIds = Object.keys(formData.usuarios);
+        const selectedUsersList = users.filter(u => selectedUserIds.includes(u._id));
 
         return (
             <div className="step-content">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                     <h3 style={{ margin: 0, color: '#333' }}>Selecione os Usuários</h3>
                     <div style={{ fontSize: '0.9rem', color: '#666', backgroundColor: '#f0f0f0', padding: '5px 10px', borderRadius: '4px' }}>
-                        {formData.nivel <= 2
+                        {formData.nivel <= 2 && !initialData
                             ? "✅ Seleção Automática (Todos do Setor)"
-                            : "👆 Seleção Manual Necessária"}
+                            : "👆 Seleção Manual (ou herdada)"}
                     </div>
                 </div>
 
+                {/* VISUALIZAÇÃO DOS SELECIONADOS */}
+                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#e3f2fd', borderRadius: '8px', border: '1px solid #90caf9' }}>
+                    <h4 style={{ marginTop: 0, marginBottom: '10px', color: '#0d47a1', fontSize: '1rem' }}>
+                        Usuários Selecionados ({selectedUsersList.length})
+                    </h4>
+                    {selectedUsersList.length === 0 ? (
+                        <p style={{ margin: 0, color: '#555', fontStyle: 'italic', fontSize: '0.9rem' }}>Nenhum usuário selecionado.</p>
+                    ) : (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                            {selectedUsersList.map(u => (
+                                <div key={u._id} style={{
+                                    display: 'flex', alignItems: 'center', gap: '5px',
+                                    backgroundColor: 'white', padding: '4px 8px', borderRadius: '16px',
+                                    border: '1px solid #bbdefb', fontSize: '0.85rem', color: '#0d47a1'
+                                }}>
+                                    <div style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: '#eee', overflow: 'hidden' }}>
+                                        {u.foto ? <img src={u.foto} alt="" style={{ width: '100%', height: '100%' }} /> : <span style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', fontSize: '0.6rem' }}>{u.nome.charAt(0)}</span>}
+                                    </div>
+                                    <span>{u.nome}</span>
+                                    <button
+                                        onClick={() => {
+                                            const newUsuarios = { ...formData.usuarios };
+                                            delete newUsuarios[u._id];
+                                            setFormData({ ...formData, usuarios: newUsuarios });
+                                        }}
+                                        style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#d32f2f', marginLeft: '4px', padding: 0, fontSize: '1rem', lineHeight: 1 }}
+                                    >
+                                        &times;
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                <h4 style={{ marginTop: '0', marginBottom: '10px', color: '#555', fontSize: '0.95rem' }}>Disponíveis nos Setores Selecionados</h4>
+
                 {filteredUsers.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '40px', color: '#888' }}>
+                    <div style={{ textAlign: 'center', padding: '20px', color: '#888', border: '1px dashed #ddd', borderRadius: '8px' }}>
                         <p>Nenhum usuário encontrado nos setores selecionados.</p>
                         <small>Volte ao passo 1 para ajustar os setores.</small>
                     </div>
                 ) : (
-                    <div className="user-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '15px', overflowY: 'auto', maxHeight: '400px' }}>
+                    <div className="user-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '15px', overflowY: 'auto', maxHeight: '300px' }}>
                         {filteredUsers.map(u => {
                             const isSelected = !!formData.usuarios[u._id];
                             return (
@@ -409,7 +489,8 @@ const ContentWizard = ({ onClose, onSuccess }) => {
                                         border: `1px solid ${isSelected ? '#007bff' : '#eee'}`,
                                         backgroundColor: isSelected ? '#e3f2fd' : 'white',
                                         cursor: 'pointer',
-                                        transition: 'all 0.2s'
+                                        transition: 'all 0.2s',
+                                        opacity: isSelected ? 0.7 : 1 // Dim selected in grid since they are shown above
                                     }}
                                 >
                                     <div style={{
@@ -423,14 +504,19 @@ const ContentWizard = ({ onClose, onSuccess }) => {
                                         <div style={{ fontWeight: '500', fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.nome}</div>
                                         <div style={{ fontSize: '0.75rem', color: '#666' }}>{u.cargo || 'Colaborador'}</div>
                                     </div>
-                                    {isSelected && <div style={{ marginLeft: 'auto', color: '#007bff' }}>✓</div>}
+                                    <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <span style={{ fontSize: '0.75rem', color: '#888', backgroundColor: '#f5f5f5', padding: '2px 6px', borderRadius: '4px' }}>
+                                            {u.nivel || 'Nível 1'}
+                                        </span>
+                                        {isSelected && <div style={{ color: '#007bff' }}>✓</div>}
+                                    </div>
                                 </div>
                             );
                         })}
                     </div>
                 )}
 
-                {formData.nivel <= 2 && (
+                {formData.nivel <= 2 && !initialData && (
                     <div style={{ marginTop: '15px', fontSize: '0.85rem', color: '#0056b3', backgroundColor: '#d1ecf1', padding: '10px', borderRadius: '4px' }}>
                         ℹ️ Como o nível selecionado é {formData.nivel === 1 ? '1' : '2'} (Básico), todos os usuários elegíveis foram pré-selecionados.
                     </div>
@@ -534,7 +620,7 @@ const ContentWizard = ({ onClose, onSuccess }) => {
             <div className="wizard-container">
                 {/* Header */}
                 <div className="wizard-header">
-                    <h2 className="wizard-title">Criar Novo Conteúdo</h2>
+                    <h2 className="wizard-title">{initialData ? 'Editar Conteúdo' : 'Criar Novo Conteúdo'}</h2>
                     <button className="wizard-close" onClick={onClose} title="Fechar">×</button>
                 </div>
 
@@ -578,7 +664,7 @@ const ContentWizard = ({ onClose, onSuccess }) => {
                             onClick={handleSubmit}
                             disabled={isSubmitting}
                         >
-                            {isSubmitting ? 'Criando...' : 'Criar Conteúdo'}
+                            {isSubmitting ? 'Salvando...' : (initialData ? 'Salvar Alterações' : 'Criar Conteúdo')}
                         </button>
                     ) : (
                         <button

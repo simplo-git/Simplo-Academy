@@ -86,6 +86,18 @@ const MultiplaEscolhaTemplate = ({ data, onChange, onRemove, index, hideRemove }
                     ))}
                 </div>
 
+                <div className="form-group" style={{ marginTop: '15px' }}>
+                    <label className="checkbox-container">
+                        <input
+                            type="checkbox"
+                            checked={data.obrigatorio !== false} // Default to true if undefined
+                            onChange={(e) => onChange(index, { ...data, obrigatorio: e.target.checked })}
+                        />
+                        <span className="checkmark"></span>
+                        <span className="label-text">Obrigatório</span>
+                    </label>
+                </div>
+
                 <button className="btn-add-option" onClick={addOption}>
                     + Adicionar opção
                 </button>

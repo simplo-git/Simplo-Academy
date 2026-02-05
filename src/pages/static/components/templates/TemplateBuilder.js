@@ -38,7 +38,8 @@ const TemplateBuilder = () => {
                     opcoes: [
                         { texto: '', correta: false },
                         { texto: '', correta: false }
-                    ]
+                    ],
+                    obrigatorio: true
                 };
             case 'video':
                 return { titulo: '', arquivo: null, nomeArquivo: null, tipoArquivo: null, tamanhoArquivo: null, descricao: '', obrigatorio: false };
@@ -153,14 +154,18 @@ const TemplateBuilder = () => {
             // It expects the base64 file in data.template.arquivo
             const hasFileUpload = templateData.template && templateData.template.arquivo;
 
-            if (isEditing) {
+            if (hasFileUpload && isEditing) {
+                // UPDATE with upload
+                url = `http://127.0.0.1:5000/api/activity-templates/video-upload/${id}`;
+                method = 'PUT';
+            } else if (hasFileUpload) {
+                // CREATE with upload
+                url = 'http://127.0.0.1:5000/api/activity-templates/video-upload';
+                method = 'POST';
+            } else if (isEditing) {
+                // UPDATE standard
                 url = `${url}/${id}`;
                 method = 'PUT';
-                // Note: The user didn't specify an upload route for editing. 
-                // Using standard route for edit unless directed otherwise.
-            } else if (hasFileUpload) {
-                // Use the specific upload route for creation with file
-                url = 'http://127.0.0.1:5000/api/activity-templates/video-upload';
             }
 
             // Prepare payload
