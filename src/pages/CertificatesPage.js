@@ -193,11 +193,16 @@ const CertificatesPage = () => {
             : 'http://127.0.0.1:5000/api/certificates';
         const method = editingCertificate ? 'PUT' : 'POST';
 
+        // When creating, exclude relacionados since the certificate doesn't exist yet
+        const payload = editingCertificate
+            ? formData
+            : { ...formData, relacionados: [] };
+
         try {
             const response = await fetch(url, {
                 method: method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(payload)
             });
 
             if (response.ok) {
@@ -655,43 +660,46 @@ const CertificatesPage = () => {
                                     </select>
                                 </div>
 
-                                <div style={{ marginBottom: '15px' }}>
-                                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Certificados Relacionados</label>
-                                    <div style={{
-                                        border: '1px solid #ddd',
-                                        borderRadius: '4px',
-                                        maxHeight: '50px',
-                                        overflowY: 'auto',
-                                        padding: '10px'
-                                    }}>
-                                        {certificates.filter(c => c._id !== editingCertificate?._id).map(cert => (
-                                            <div key={cert._id} style={{ marginBottom: '5px', display: 'flex', alignItems: 'center' }}>
-                                                <input
-                                                    type="checkbox"
-                                                    id={`rel-${cert._id}`}
-                                                    checked={formData.relacionados?.some(r => (typeof r === 'object' ? r._id === cert._id : r === cert._id))}
-                                                    onChange={(e) => {
-                                                        const isChecked = e.target.checked;
-                                                        let newRelated = [...(formData.relacionados || [])];
-                                                        if (isChecked) {
-                                                            newRelated.push(cert._id);
-                                                        } else {
-                                                            newRelated = newRelated.filter(id => (typeof id === 'object' ? id._id !== cert._id : id !== cert._id));
-                                                        }
-                                                        setFormData({ ...formData, relacionados: newRelated });
-                                                    }}
-                                                    style={{ marginRight: '8px' }}
-                                                />
-                                                <label htmlFor={`rel-${cert._id}`} style={{ cursor: 'pointer', fontSize: '0.9rem' }}>
-                                                    {cert.nome}
-                                                </label>
-                                            </div>
-                                        ))}
-                                        {certificates.length <= (editingCertificate ? 1 : 0) && (
-                                            <span style={{ color: '#888', fontStyle: 'italic', fontSize: '0.9rem' }}>Nenhum outro certificado disponível.</span>
-                                        )}
+                                {/* Certificados Relacionados: Only show when editing */}
+                                {editingCertificate && (
+                                    <div style={{ marginBottom: '15px' }}>
+                                        <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Certificados Relacionados</label>
+                                        <div style={{
+                                            border: '1px solid #ddd',
+                                            borderRadius: '4px',
+                                            maxHeight: '100px',
+                                            overflowY: 'auto',
+                                            padding: '10px'
+                                        }}>
+                                            {certificates.filter(c => c._id !== editingCertificate?._id).map(cert => (
+                                                <div key={cert._id} style={{ marginBottom: '5px', display: 'flex', alignItems: 'center' }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        id={`rel-${cert._id}`}
+                                                        checked={formData.relacionados?.some(r => (typeof r === 'object' ? r._id === cert._id : r === cert._id))}
+                                                        onChange={(e) => {
+                                                            const isChecked = e.target.checked;
+                                                            let newRelated = [...(formData.relacionados || [])];
+                                                            if (isChecked) {
+                                                                newRelated.push(cert._id);
+                                                            } else {
+                                                                newRelated = newRelated.filter(id => (typeof id === 'object' ? id._id !== cert._id : id !== cert._id));
+                                                            }
+                                                            setFormData({ ...formData, relacionados: newRelated });
+                                                        }}
+                                                        style={{ marginRight: '8px' }}
+                                                    />
+                                                    <label htmlFor={`rel-${cert._id}`} style={{ cursor: 'pointer', fontSize: '0.9rem' }}>
+                                                        {cert.nome}
+                                                    </label>
+                                                </div>
+                                            ))}
+                                            {certificates.length <= 1 && (
+                                                <span style={{ color: '#888', fontStyle: 'italic', fontSize: '0.9rem' }}>Nenhum outro certificado disponível.</span>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
                                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                                     <button

@@ -274,6 +274,21 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
             setFormData({ ...formData, conteudos: newOrder });
         };
 
+        // Helper to get icon by type
+        const getTemplateIcon = (type) => {
+            switch (type) {
+                case 'video': return '🎥';
+                case 'quiz':
+                case 'multipla_escolha': return '📝';
+                case 'texto_livre': return '✍️';
+                case 'upload': return '📤';
+                case 'artigo':
+                case 'conteudo': return '📰';
+                case 'link': return '🔗';
+                default: return '📄';
+            }
+        };
+
         return (
             <div className="step-content">
                 <div style={{ display: 'flex', gap: '2rem', height: '100%' }}>
@@ -292,7 +307,7 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
                                             style={{ padding: '12px' }}
                                         >
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                <div style={{ fontSize: '1.5rem' }}>📄</div>
+                                                <div style={{ fontSize: '1.5rem' }}>{getTemplateIcon(t.tipo)}</div>
                                                 <div>
                                                     <div className="card-title" style={{ fontSize: '0.9rem' }}>{t.nome}</div>
                                                     <div className="card-subtitle" style={{ fontSize: '0.8rem' }}>{t.atividades?.length || 0} atividades</div>

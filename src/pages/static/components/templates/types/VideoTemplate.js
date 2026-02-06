@@ -147,19 +147,6 @@ const VideoTemplate = ({ data, onChange, onRemove, index, hideRemove }) => {
                     </label>
                 </div>
 
-                <div className="form-group">
-                    <label className="form-label">Capa do Vídeo (Thumbnail)</label>
-                    <input
-                        type="text"
-                        className="form-input"
-                        placeholder="URL da imagem de capa (opcional)"
-                        value={data.thumbnail || ''}
-                        onChange={(e) => handleChange('thumbnail', e.target.value)}
-                    />
-                    <div style={{ marginTop: '5px', fontSize: '0.8rem', color: '#666' }}>
-                        Cole a URL de uma imagem para ser exibida antes do vídeo iniciar.
-                    </div>
-                </div>
             </div>
         </div>
     );

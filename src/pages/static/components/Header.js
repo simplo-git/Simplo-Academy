@@ -22,12 +22,6 @@ const Header = () => {
     return (
         <header className="main-header">
             <div className="header-left">
-                <div className="menu-toggle">
-                    {/* Hamburger Icon SVG */}
-                    <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-                        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
-                    </svg>
-                </div>
                 <div className="app-logo-text" onClick={() => navigate('/home')} style={{ cursor: 'pointer' }}>
                     <img src={logo} alt="Logo" style={{ height: '25px' }} />
                     Simplo Academy
@@ -115,6 +109,16 @@ const Header = () => {
                                 </svg>
                             </span>
                             Sair
+                        </div>
+                        <div style={{
+                            textAlign: 'center',
+                            padding: '10px',
+                            fontSize: '0.75rem',
+                            color: '#999',
+                            borderTop: '1px solid #eee',
+                            marginTop: '5px'
+                        }}>
+                            V-0.0.1-beta
                         </div>
                     </div>
                 )}
