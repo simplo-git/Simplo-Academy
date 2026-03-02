@@ -22,15 +22,15 @@ const UserProfilePage = () => {
         setLoading(true);
         try {
             // Fetch User
-            const userRes = await fetch(`http://127.0.0.1:5000/api/users/${id}`);
+            const userRes = await fetch(`http://192.168.0.17:9000/api/users/${id}`);
             const userData = await userRes.json();
 
             // Fetch Certificates to get details (images)
-            const certRes = await fetch('http://127.0.0.1:5000/api/certificates');
+            const certRes = await fetch('http://192.168.0.17:9000/api/certificates');
             const certData = await certRes.json();
 
             // Fetch Roles to get sector names
-            const roleRes = await fetch('http://127.0.0.1:5000/api/roles');
+            const roleRes = await fetch('http://192.168.0.17:9000/api/roles');
             const roleData = await roleRes.json();
 
             // Enrich user certificates with details
@@ -96,10 +96,14 @@ const UserProfilePage = () => {
             // Add edges from relations
             if (cert.details?.relacionados && Array.isArray(cert.details.relacionados)) {
                 cert.details.relacionados.forEach(rel => {
+                    const relatedId = typeof rel === 'object' ? (rel._id || rel.id) : rel;
+                    if (!relatedId) return;
+
                     // Check if the related cert is actually owned by the user
                     const relatedUserCert = certs.find(uc =>
-                        (uc.id === rel.id || uc.certificate === rel.id) ||
-                        (uc.details && uc.details._id === rel.id)
+                        uc.id === relatedId ||
+                        uc.certificate === relatedId ||
+                        (uc.details && uc.details._id === relatedId)
                     );
 
                     if (relatedUserCert) {

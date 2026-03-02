@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ActivityRenderer from './ActivityRenderer';
 import '../css/ContentWizard.css'; // Reuse container styles
 import { getUser } from '../../../auth/auth';
+import ConfirmationModal from './ConfirmationModal';
 
 const ContentPlayerModal = ({ content, onClose }) => {
     const user = getUser();
@@ -14,10 +15,16 @@ const ContentPlayerModal = ({ content, onClose }) => {
     const [contentData, setContentData] = useState(content); // Local state for content data
     const [userAnswers, setUserAnswers] = useState([]);
 
+    // States for completion screen
+    const [showCompletion, setShowCompletion] = useState(false);
+    const [completionData, setCompletionData] = useState(null);
+    const [certificateDetails, setCertificateDetails] = useState(null);
+    const [showConfirmClose, setShowConfirmClose] = useState(false);
+
     // Fetch fresh content data to get user progress
     const refreshContent = async () => {
         try {
-            const res = await fetch(`http://127.0.0.1:5000/api/conteudos/${content._id}`);
+            const res = await fetch(`http://192.168.0.17:9000/api/conteudos/${content._id}`);
             if (res.ok) {
                 const data = await res.json();
                 setContentData(data);
@@ -63,7 +70,7 @@ const ContentPlayerModal = ({ content, onClose }) => {
                 // Fetch details for each template with error handling
                 const promises = templateIds.map(async id => {
                     try {
-                        const res = await fetch(`http://127.0.0.1:5000/api/activity-templates/${id}`);
+                        const res = await fetch(`http://192.168.0.17:9000/api/activity-templates/${id}`);
                         if (!res.ok) {
                             console.warn(`Template fetch failed for ${id}: ${res.status}`);
                             return null;
@@ -131,7 +138,7 @@ const ContentPlayerModal = ({ content, onClose }) => {
                 ...answerData
             };
 
-            const response = await fetch(`http://127.0.0.1:5000/api/conteudos/${content._id}/resposta`, {
+            const response = await fetch(`http://192.168.0.17:9000/api/conteudos/${content._id}/resposta`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -162,7 +169,7 @@ const ContentPlayerModal = ({ content, onClose }) => {
             // Finished - call backend to conclude
             if (userId) {
                 try {
-                    const response = await fetch(`http://127.0.0.1:5000/api/conteudos/${content._id}/conclusao`, {
+                    const response = await fetch(`http://192.168.0.17:9000/api/conteudos/${content._id}/conclusao`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -172,20 +179,35 @@ const ContentPlayerModal = ({ content, onClose }) => {
 
 
                     if (response.ok) {
-                        alert("Parabéns! Conteúdo Concluído com Sucesso!");
+                        const data = await response.json();
+                        setCompletionData(data);
+
+                        // Fetch certificate if applicable
+                        if (contentData && contentData.certificado_id) {
+                            try {
+                                const certRes = await fetch(`http://192.168.0.17:9000/api/certificates`);
+                                if (certRes.ok) {
+                                    const allCerts = await certRes.json();
+                                    const cert = allCerts.find(c => String(c._id) === String(contentData.certificado_id));
+                                    if (cert) setCertificateDetails(cert);
+                                }
+                            } catch (e) { console.error("Erro ao buscar certificado:", e); }
+                        }
+
+                        setShowCompletion(true);
+                        return; // Prevent modal from closing immediately
                     } else {
                         console.error("Erro ao concluir conteúdo:", await response.text());
                         alert("Conteúdo finalizado, mas houve um erro ao salvar a conclusão.");
+                        exitFullscreenAndClose();
                     }
                 } catch (error) {
                     console.error("Erro de conexão ao concluir:", error);
+                    exitFullscreenAndClose();
                 }
+            } else {
+                exitFullscreenAndClose();
             }
-            // Exit fullscreen and close
-            if (document.exitFullscreen && document.fullscreenElement) {
-                document.exitFullscreen().catch(e => console.log(e));
-            }
-            onClose();
         }
     };
 
@@ -266,10 +288,12 @@ const ContentPlayerModal = ({ content, onClose }) => {
         // Calculate remaining percentage
         const remaining = Math.max(0, 100 - progressPercent);
 
-        // Force confirm
-        if (window.confirm(`Você concluiu ${Math.round(progressPercent)}% do conteúdo. Ainda falta ${Math.round(remaining)}%. Tem certeza que deseja sair?`)) {
-            exitFullscreenAndClose();
-        }
+        // Force confirm using custom modal instead of window.confirm
+        setShowConfirmClose(true);
+    };
+
+    const handleConfirmClose = () => {
+        exitFullscreenAndClose();
     };
 
     const exitFullscreenAndClose = () => {
@@ -281,6 +305,17 @@ const ContentPlayerModal = ({ content, onClose }) => {
 
     return (
         <div className="wizard-overlay">
+            {/* Custom Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showConfirmClose}
+                onClose={() => setShowConfirmClose(false)}
+                onConfirm={handleConfirmClose}
+                title="Sair do Conteúdo"
+                message={`Você concluiu ${Math.round(progressPercent)}% do conteúdo. Ainda falta ${Math.round(Math.max(0, 100 - progressPercent))}%. Tem certeza que deseja sair? O progresso será salvo.`}
+                confirmText="Sair mesmo assim"
+                cancelText="Continuar assistindo"
+            />
+
             <div className="wizard-container" style={{ maxWidth: '1000px', height: '90vh', display: 'flex', flexDirection: 'column' }}>
                 {/* Header */}
                 <div className="wizard-header" style={{ flexShrink: 0 }}>
@@ -309,7 +344,94 @@ const ContentPlayerModal = ({ content, onClose }) => {
 
                 {/* Content Body */}
                 <div className="wizard-body" style={{ flex: 1, overflowY: 'auto', padding: '0', display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: '#ffffffff' }}>
-                    {loading ? (
+                    {showCompletion ? (
+                        <div style={{
+                            width: '90%',
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '40px',
+                            textAlign: 'center',
+                            animation: 'fadeIn 0.5s ease-in-out'
+                        }}>
+                            {completionData?.final_status === 'aprovado' ? (
+                                <>
+                                    <div style={{ fontSize: '5rem', marginBottom: '20px', animation: 'bounce 2s infinite' }}>🎉</div>
+                                    <h2 style={{ color: '#28a745', marginBottom: '10px', fontSize: '2rem' }}>Parabéns!</h2>
+                                    <p style={{ fontSize: '1.2rem', color: '#555', marginBottom: '20px' }}>Você concluiu este conteúdo com sucesso e foi aprovado com nota <strong>{completionData.nota}</strong>.</p>
+
+                                    {certificateDetails && (
+                                        <div style={{
+                                            marginTop: '20px',
+                                            padding: '20px',
+                                            borderRadius: '15px',
+                                            background: 'linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)',
+                                            boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
+                                            border: '2px solid #ffd700',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            maxWidth: '400px'
+                                        }}>
+                                            <h3 style={{ margin: '0 0 15px', color: '#333' }}>Certificado Desbloqueado</h3>
+                                            {certificateDetails.insignia ? (
+                                                <img src={certificateDetails.insignia} alt="Certificado" style={{ width: '120px', height: '120px', objectFit: 'cover', borderRadius: '50%', border: '4px solid white', boxShadow: '0 4px 8px rgba(0,0,0,0.2)', marginBottom: '15px' }} />
+                                            ) : (
+                                                <div style={{ fontSize: '4rem', marginBottom: '10px' }}>🏆</div>
+                                            )}
+                                            <p style={{ fontWeight: 'bold', margin: '0', color: '#111', fontSize: '1.1rem' }}>{certificateDetails.nome}</p>
+                                        </div>
+                                    )}
+                                </>
+                            ) : completionData?.final_status === 'reprovado' ? (
+                                <>
+                                    <div style={{ fontSize: '5rem', marginBottom: '20px' }}>😔</div>
+                                    <h2 style={{ color: '#dc3545', marginBottom: '10px', fontSize: '2rem' }}>Não foi dessa vez!</h2>
+                                    <p style={{ fontSize: '1.2rem', color: '#555', marginBottom: '20px' }}>Você concluiu o conteúdo, mas não alcançou a nota necessária. Sua nota foi <strong>{completionData.nota}</strong>.</p>
+                                </>
+                            ) : completionData?.final_status === 'aguardando correção' ? (
+                                <>
+                                    <div style={{ fontSize: '5rem', marginBottom: '20px' }}>⏳</div>
+                                    <h2 style={{ color: '#17a2b8', marginBottom: '10px', fontSize: '2rem' }}>Conteúdo Concluído!</h2>
+                                    <p style={{ fontSize: '1.2rem', color: '#555', marginBottom: '20px' }}>Suas atividades foram enviadas com sucesso e agora estão <strong>aguardando correção manual</strong> do instrutor.</p>
+                                    {certificateDetails && (
+                                        <div style={{ marginTop: '20px', opacity: 0.7 }}>
+                                            <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '10px' }}>Certificado em potencial:</p>
+                                            {certificateDetails.insignia ? (
+                                                <img src={certificateDetails.insignia} alt="Certificado Preview" style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '50%', filter: 'grayscale(100%)' }} />
+                                            ) : (
+                                                <div style={{ fontSize: '3rem' }}>🏆</div>
+                                            )}
+                                            <p style={{ fontSize: '0.85rem', margin: '5px 0 0', fontWeight: 'bold' }}>{certificateDetails.nome}</p>
+                                        </div>
+                                    )}
+                                </>
+                            ) : (
+                                <>
+                                    {/* Fallback */}
+                                    <div style={{ fontSize: '5rem', marginBottom: '20px' }}>✅</div>
+                                    <h2 style={{ color: '#28a745', marginBottom: '10px', fontSize: '2rem' }}>Concluído!</h2>
+                                    <p style={{ fontSize: '1.2rem', color: '#555' }}>O conteúdo foi finalizado com sucesso.</p>
+                                </>
+                            )}
+
+                            <style>
+                                {`
+                                    @keyframes fadeIn {
+                                        from { opacity: 0; transform: translateY(20px); }
+                                        to { opacity: 1; transform: translateY(0); }
+                                    }
+                                    @keyframes bounce {
+                                        0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+                                        40% { transform: translateY(-20px); }
+                                        60% { transform: translateY(-10px); }
+                                    }
+                                `}
+                            </style>
+                        </div>
+                    ) : loading ? (
                         <div style={{ alignSelf: 'center' }}>Carregando conteúdo...</div>
                     ) : allActivities.length === 0 ? (
                         <div style={{ alignSelf: 'center' }}>Nenhuma atividade neste conteúdo.</div>
@@ -329,41 +451,56 @@ const ContentPlayerModal = ({ content, onClose }) => {
 
                 {/* Footer Controls */}
                 <div className="wizard-footer" style={{ borderTop: '1px solid #ddd', padding: '15px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <button
-                        className="btn-secondary"
-                        onClick={handlePrevious}
-                        disabled={currentActivityIndex === 0}
-                    >
-                        Anterior
-                    </button>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        {isBlocked && (
-                            <span style={{ color: '#d9534f', fontSize: '0.9rem' }}>
-                                Complete a atividade para continuar
-                            </span>
-                        )}
-                        <button
-                            className="btn-primary"
-                            onClick={async () => {
-                                // If last activity AND already finished, just close
-                                if (isLastActivity && isContentFinished) {
-                                    exitFullscreenAndClose();
-                                    return;
-                                }
-                                await handleNext();
-                            }}
-                            disabled={isBlocked}
-                            style={{
-                                opacity: isBlocked ? 0.5 : 1,
-                                cursor: isBlocked ? 'not-allowed' : 'pointer',
-                                backgroundColor: (isLastActivity && isContentFinished) ? '#6c757d' : undefined, // Grey if just closing
-                                borderColor: (isLastActivity && isContentFinished) ? '#6c757d' : undefined
-                            }}
-                        >
-                            {nextLabel}
-                        </button>
-                    </div>
+                    {showCompletion ? (
+                        <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                            <button
+                                className="btn-primary"
+                                onClick={exitFullscreenAndClose}
+                                style={{ padding: '12px 30px', fontSize: '1.2rem', borderRadius: '30px' }}
+                            >
+                                Sair
+                            </button>
+                        </div>
+                    ) : (
+                        <>
+                            <button
+                                className="btn-secondary"
+                                onClick={handlePrevious}
+                                disabled={currentActivityIndex === 0}
+                            >
+                                Anterior
+                            </button>
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                {isBlocked && (
+                                    <span style={{ color: '#d9534f', fontSize: '0.9rem' }}>
+                                        Complete a atividade para continuar
+                                    </span>
+                                )}
+                                <button
+                                    className="btn-primary"
+                                    onClick={async () => {
+                                        // If last activity AND already finished, just close
+                                        if (isLastActivity && isContentFinished) {
+                                            exitFullscreenAndClose();
+                                            return;
+                                        }
+                                        await handleNext();
+                                    }}
+                                    disabled={isBlocked}
+                                    style={{
+                                        opacity: isBlocked ? 0.5 : 1,
+                                        cursor: isBlocked ? 'not-allowed' : 'pointer',
+                                        backgroundColor: (isLastActivity && isContentFinished) ? '#6c757d' : undefined, // Grey if just closing
+                                        borderColor: (isLastActivity && isContentFinished) ? '#6c757d' : undefined
+                                    }}
+                                >
+                                    {nextLabel}
+                                </button>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
         </div>

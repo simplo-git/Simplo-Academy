@@ -48,7 +48,7 @@ const TextoLivreTemplate = ({ data, onChange, onRemove, index, hideRemove }) => 
                         <input
                             type="number"
                             className="form-input"
-                            placeholder="5000"
+                            placeholder="9000"
                             min="0"
                             value={data.maxCaracteres || ''}
                             onChange={(e) => handleChange('maxCaracteres', e.target.value)}

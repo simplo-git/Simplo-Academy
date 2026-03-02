@@ -17,12 +17,23 @@ const UserAnswersView = ({ content, user, onClose, onReset, onUpdate }) => {
 
         setIsSubmitting(true);
         try {
-            const response = await fetch(`http://127.0.0.1:5000/api/conteudos/${content._id}/grade`, {
+            // Determine grade to send: 
+            // If input is valid number, use it. 
+            // If empty/invalid and status is 'reprovado', send 0 (or keep existing? backend replaces it, so user sees 0).
+            // Logic: if 'aprovado', input is mandatory (checked above).
+            // if 'reprovado', if input is empty, default to 0.
+
+            let finalGrade = parseFloat(gradeInput);
+            if (isNaN(finalGrade)) {
+                finalGrade = 0;
+            }
+
+            const response = await fetch(`http://192.168.0.17:9000/api/conteudos/${content._id}/grade`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     user_id: user._id,
-                    nota: parseFloat(gradeInput),
+                    nota: finalGrade,
                     status: status
                 })
             });
@@ -184,9 +195,12 @@ const UserAnswersView = ({ content, user, onClose, onReset, onUpdate }) => {
                     )}
                 </div>
 
-                {userProgress.status !== 'aprovado' && content.correcao !== 'automatica' && (
+                {/* Always show manual grading controls if correction is manual OR if we want to override status (like revoking approval) */}
+                {(content.correcao !== 'automatica' || userProgress.status === 'aprovado') && (
                     <div style={{ marginTop: '20px', paddingTop: '15px', borderTop: '1px solid #eee' }}>
-                        <h4 style={{ marginTop: 0, color: '#333' }}>Avaliação Manual</h4>
+                        <h4 style={{ marginTop: 0, color: '#333' }}>
+                            {userProgress.status === 'aprovado' ? 'Alterar Avaliação / Revogar' : 'Avaliação Manual'}
+                        </h4>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                             <div style={{ flex: '1' }}>
                                 <label style={{ display: 'block', fontSize: '0.8rem', color: '#666', marginBottom: '4px' }}>Nota (0.0 - 10.0)</label>
@@ -221,7 +235,7 @@ const UserAnswersView = ({ content, user, onClose, onReset, onUpdate }) => {
                                         opacity: isSubmitting ? 0.7 : 1
                                     }}
                                 >
-                                    ✅ Aprovar
+                                    ✅ {userProgress.status === 'aprovado' ? 'Salvar Nota' : 'Aprovar'}
                                 </button>
                                 <button
                                     onClick={() => handleGrade('reprovado')}
@@ -237,7 +251,7 @@ const UserAnswersView = ({ content, user, onClose, onReset, onUpdate }) => {
                                         opacity: isSubmitting ? 0.7 : 1
                                     }}
                                 >
-                                    ❌ Reprovar
+                                    ❌ {userProgress.status === 'aprovado' ? 'Revogar & Reprovar' : 'Reprovar'}
                                 </button>
                             </div>
                         </div>

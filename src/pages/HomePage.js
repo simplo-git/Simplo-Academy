@@ -26,11 +26,11 @@ function HomePage() {
         const fetchData = async () => {
             try {
                 // Fetch Contents
-                const cRes = await fetch('http://127.0.0.1:5000/api/conteudos');
+                const cRes = await fetch('http://192.168.0.17:9000/api/conteudos');
                 const cData = await cRes.json();
 
                 // Fetch Roles (Setores) for name mapping if needed
-                const rRes = await fetch('http://127.0.0.1:5000/api/roles');
+                const rRes = await fetch('http://192.168.0.17:9000/api/roles');
                 const rData = await rRes.json();
 
                 setContents(cRes.ok ? cData : []);

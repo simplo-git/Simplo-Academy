@@ -43,7 +43,7 @@ const UserRegisterPage = () => {
 
     const fetchRoles = async () => {
         try {
-            const response = await fetch('http://127.0.0.1:5000/api/roles');
+            const response = await fetch('http://192.168.0.17:9000/api/roles');
             if (response.ok) {
                 const data = await response.json();
                 setRoles(data);
@@ -55,7 +55,7 @@ const UserRegisterPage = () => {
 
     const fetchCertificates = async () => {
         try {
-            const response = await fetch('http://127.0.0.1:5000/api/certificates');
+            const response = await fetch('http://192.168.0.17:9000/api/certificates');
             if (response.ok) {
                 const data = await response.json();
                 setAvailableCerts(data);
@@ -68,7 +68,7 @@ const UserRegisterPage = () => {
 
     const fetchUser = async () => {
         try {
-            const response = await fetch(`http://127.0.0.1:5000/api/users/${id}`);
+            const response = await fetch(`http://192.168.0.17:9000/api/users/${id}`);
             if (response.ok) {
                 const data = await response.json();
                 // Format date for input: YYYY-MM-DD
@@ -184,8 +184,8 @@ const UserRegisterPage = () => {
         setSuccess('');
 
         const url = isEditMode
-            ? `http://127.0.0.1:5000/api/users/${id}`
-            : 'http://127.0.0.1:5000/api/users';
+            ? `http://192.168.0.17:9000/api/users/${id}`
+            : 'http://192.168.0.17:9000/api/users';
 
         const method = isEditMode ? 'PUT' : 'POST';
 
@@ -514,12 +514,12 @@ const UserRegisterPage = () => {
                                                     <div style={{ width: '50px', height: '50px', borderRadius: '4px', backgroundColor: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>🏆</div>
                                                 )}
                                                 <div style={{ flex: 1 }}>
-                                                    <div style={{ fontWeight: 'bold' }}>{certDetails?.nome || 'Desconhecido'}</div>
-                                                    <div style={{ fontSize: '0.85em', color: '#666' }}>Concluído em: {certItem.data_conclusao}</div>
+                                                    <div style={{ fontWeight: 'bold' }}>{certDetails?.nome || certItem.nome_conteudo || 'Desconhecido'}</div>
+                                                    <div style={{ fontSize: '0.85em', color: '#666' }}>Concluído em: {certItem.data_conclusao ? certItem.data_conclusao.split('T')[0].split('-').reverse().join('/') : ''}</div>
                                                 </div>
                                                 <button
                                                     type="button"
-                                                    onClick={() => handleRemoveCertificate(certItem.certificate)}
+                                                    onClick={() => handleRemoveCertificate(certId)}
                                                     style={{
                                                         background: 'none',
                                                         border: 'none',

@@ -71,7 +71,7 @@ const TemplateBuilder = () => {
 
     const fetchTemplate = async () => {
         try {
-            const response = await fetch(`http://127.0.0.1:5000/api/activity-templates/${id}`);
+            const response = await fetch(`http://192.168.0.17:9000/api/activity-templates/${id}`);
             if (response.ok) {
                 const data = await response.json();
 
@@ -146,7 +146,7 @@ const TemplateBuilder = () => {
         setSaving(true);
         try {
             // Determine API URL and Method
-            let url = 'http://127.0.0.1:5000/api/activity-templates';
+            let url = 'http://192.168.0.17:9000/api/activity-templates';
             let method = 'POST';
 
             // Check if we need to use the upload route
@@ -156,11 +156,11 @@ const TemplateBuilder = () => {
 
             if (hasFileUpload && isEditing) {
                 // UPDATE with upload
-                url = `http://127.0.0.1:5000/api/activity-templates/video-upload/${id}`;
+                url = `http://192.168.0.17:9000/api/activity-templates/video-upload/${id}`;
                 method = 'PUT';
             } else if (hasFileUpload) {
                 // CREATE with upload
-                url = 'http://127.0.0.1:5000/api/activity-templates/video-upload';
+                url = 'http://192.168.0.17:9000/api/activity-templates/video-upload';
                 method = 'POST';
             } else if (isEditing) {
                 // UPDATE standard

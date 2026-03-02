@@ -31,7 +31,7 @@ const VideoActivity = ({ data, context, currentAnswer, onActivityCompleted }) =>
                 nota: 100 // Optional: full score for watching
             };
 
-            const response = await fetch(`http://127.0.0.1:5000/api/conteudos/${context.contentId}/resposta`, {
+            const response = await fetch(`http://192.168.0.17:9000/api/conteudos/${context.contentId}/resposta`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

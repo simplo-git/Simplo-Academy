@@ -42,7 +42,7 @@ const UploadActivity = ({ data, onAnswer, currentAnswer, activityId }) => {
 
         try {
             // New route as requested
-            const response = await fetch('http://127.0.0.1:5000/api/activity-templates/document-upload', {
+            const response = await fetch('http://192.168.0.17:9000/api/activity-templates/document-upload', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

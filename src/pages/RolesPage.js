@@ -13,7 +13,7 @@ const RolesPage = () => {
     // Fetch Roles
     const fetchRoles = async () => {
         try {
-            const response = await fetch('http://127.0.0.1:5000/api/roles');
+            const response = await fetch('http://192.168.0.17:9000/api/roles');
             if (response.ok) {
                 const data = await response.json();
                 setRoles(data);
@@ -52,8 +52,8 @@ const RolesPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         const url = editingRole
-            ? `http://127.0.0.1:5000/api/roles/${editingRole._id}`
-            : 'http://127.0.0.1:5000/api/roles';
+            ? `http://192.168.0.17:9000/api/roles/${editingRole._id}`
+            : 'http://192.168.0.17:9000/api/roles';
         const method = editingRole ? 'PUT' : 'POST';
 
         try {
@@ -67,7 +67,7 @@ const RolesPage = () => {
                 handleCloseModal();
                 fetchRoles(); // Refresh list
             } else {
-                alert('Erro ao salvar cargo');
+                alert('Erro ao salvar Setor');
             }
         } catch (err) {
             console.error(err);
@@ -76,15 +76,15 @@ const RolesPage = () => {
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm('Tem certeza que deseja excluir este cargo?')) {
+        if (window.confirm('Tem certeza que deseja excluir este Setor?')) {
             try {
-                const response = await fetch(`http://127.0.0.1:5000/api/roles/${id}`, {
+                const response = await fetch(`http://192.168.0.17:9000/api/roles/${id}`, {
                     method: 'DELETE'
                 });
                 if (response.ok) {
                     fetchRoles();
                 } else {
-                    alert('Erro ao excluir cargo');
+                    alert('Erro ao excluir Setor');
                 }
             } catch (err) {
                 console.error(err);
@@ -111,7 +111,7 @@ const RolesPage = () => {
                             fontWeight: 'bold'
                         }}
                     >
-                        + Adicionar Cargo
+                        + Adicionar Setor
                     </button>
                 </div>
 
@@ -131,7 +131,7 @@ const RolesPage = () => {
                                 {roles.length === 0 ? (
                                     <tr>
                                         <td colSpan="2" style={{ padding: '20px', textAlign: 'center', color: '#888' }}>
-                                            Nenhum cargo cadastrado.
+                                            Nenhum Setor cadastrado.
                                         </td>
                                     </tr>
                                 ) : (
@@ -178,10 +178,10 @@ const RolesPage = () => {
                             width: '400px',
                             boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
                         }}>
-                            <h3 style={{ marginTop: 0 }}>{editingRole ? 'Editar Cargo' : 'Novo Cargo'}</h3>
+                            <h3 style={{ marginTop: 0 }}>{editingRole ? 'Editar Setor' : 'Novo Setor'}</h3>
                             <form onSubmit={handleSubmit}>
                                 <div style={{ marginBottom: '15px' }}>
-                                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Nome do Cargo</label>
+                                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Nome do Setor</label>
                                     <input
                                         type="text"
                                         value={formData.nome}

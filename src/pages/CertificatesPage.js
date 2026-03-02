@@ -26,7 +26,7 @@ const CertificatesPage = () => {
     // Fetch Certificates
     const fetchCertificates = async () => {
         try {
-            const response = await fetch('http://127.0.0.1:5000/api/certificates');
+            const response = await fetch('http://192.168.0.17:9000/api/certificates');
             if (response.ok) {
                 const data = await response.json();
                 setCertificates(data);
@@ -165,7 +165,7 @@ const CertificatesPage = () => {
                     data_criacao: new Date().toISOString().split('T')[0]
                 };
 
-                const response = await fetch('http://127.0.0.1:5000/api/certificates', {
+                const response = await fetch('http://192.168.0.17:9000/api/certificates', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -189,8 +189,8 @@ const CertificatesPage = () => {
 
     const saveCertificate = async () => {
         const url = editingCertificate
-            ? `http://127.0.0.1:5000/api/certificates/${editingCertificate._id}`
-            : 'http://127.0.0.1:5000/api/certificates';
+            ? `http://192.168.0.17:9000/api/certificates/${editingCertificate._id}`
+            : 'http://192.168.0.17:9000/api/certificates';
         const method = editingCertificate ? 'PUT' : 'POST';
 
         // When creating, exclude relacionados since the certificate doesn't exist yet
@@ -229,7 +229,7 @@ const CertificatesPage = () => {
 
                             // Only update if there are changes
                             if (JSON.stringify(newRelated.sort()) !== JSON.stringify(existingRelated.sort())) {
-                                await fetch(`http://127.0.0.1:5000/api/certificates/${certId}`, {
+                                await fetch(`http://192.168.0.17:9000/api/certificates/${certId}`, {
                                     method: 'PUT',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({
@@ -309,7 +309,7 @@ const CertificatesPage = () => {
 
                 console.log(`Updating ${cert.nome} to level ${cert.newLevel}`);
 
-                const response = await fetch(`http://127.0.0.1:5000/api/certificates/${cert._id}`, {
+                const response = await fetch(`http://192.168.0.17:9000/api/certificates/${cert._id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(updatePayload)
@@ -324,15 +324,15 @@ const CertificatesPage = () => {
 
             // STEP 2: Refresh the certificates list to get updated data
             console.log('Step 2: Refreshing certificates list...');
-            const freshCertsResponse = await fetch('http://127.0.0.1:5000/api/certificates');
+            const freshCertsResponse = await fetch('http://192.168.0.17:9000/api/certificates');
             const freshCerts = await freshCertsResponse.json();
             setCertificates(freshCerts);
 
             // STEP 3: Save the main certificate
             console.log('Step 3: Saving main certificate...');
             const url = editingCertificate
-                ? `http://127.0.0.1:5000/api/certificates/${editingCertificate._id}`
-                : 'http://127.0.0.1:5000/api/certificates';
+                ? `http://192.168.0.17:9000/api/certificates/${editingCertificate._id}`
+                : 'http://192.168.0.17:9000/api/certificates';
             const method = editingCertificate ? 'PUT' : 'POST';
 
             const mainResponse = await fetch(url, {
@@ -366,7 +366,7 @@ const CertificatesPage = () => {
                         const newRelated = [...new Set([...existingRelated, ...groupIds])].filter(id => id !== certId);
 
                         if (JSON.stringify(newRelated.sort()) !== JSON.stringify(existingRelated.sort())) {
-                            await fetch(`http://127.0.0.1:5000/api/certificates/${certId}`, {
+                            await fetch(`http://192.168.0.17:9000/api/certificates/${certId}`, {
                                 method: 'PUT',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
@@ -401,7 +401,7 @@ const CertificatesPage = () => {
     const handleDelete = async (id) => {
         if (window.confirm('Tem certeza que deseja excluir este certificado?')) {
             try {
-                const response = await fetch(`http://127.0.0.1:5000/api/certificates/${id}`, {
+                const response = await fetch(`http://192.168.0.17:9000/api/certificates/${id}`, {
                     method: 'DELETE'
                 });
                 if (response.ok) {

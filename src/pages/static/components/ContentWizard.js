@@ -68,19 +68,19 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
             setLoadingData(true);
             try {
                 // Fetch Templates
-                const tRes = await fetch('http://127.0.0.1:5000/api/activity-templates');
+                const tRes = await fetch('http://192.168.0.17:9000/api/activity-templates');
                 if (tRes.ok) setTemplates(await tRes.json());
 
                 // Fetch Users
-                const uRes = await fetch('http://127.0.0.1:5000/api/users');
+                const uRes = await fetch('http://192.168.0.17:9000/api/users');
                 if (uRes.ok) setUsers(await uRes.json());
 
                 // Fetch Roles (Setores)
-                const rRes = await fetch('http://127.0.0.1:5000/api/roles');
+                const rRes = await fetch('http://192.168.0.17:9000/api/roles');
                 if (rRes.ok) setRoles(await rRes.json());
 
                 // Fetch Certificates
-                const cRes = await fetch('http://127.0.0.1:5000/api/certificates');
+                const cRes = await fetch('http://192.168.0.17:9000/api/certificates');
                 if (cRes.ok) setCertificates(await cRes.json());
 
             } catch (err) {
@@ -150,8 +150,8 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
         setIsSubmitting(true);
         try {
             const url = initialData
-                ? `http://127.0.0.1:5000/api/conteudos/${initialData._id}`
-                : 'http://127.0.0.1:5000/api/conteudos';
+                ? `http://192.168.0.17:9000/api/conteudos/${initialData._id}`
+                : 'http://192.168.0.17:9000/api/conteudos';
 
             const method = initialData ? 'PUT' : 'POST';
 

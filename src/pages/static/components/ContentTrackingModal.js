@@ -11,7 +11,7 @@ const ContentTrackingModal = ({ content, onClose }) => {
     // Refresh content data (e.g. after grading)
     const refreshContent = async () => {
         try {
-            const response = await fetch(`http://127.0.0.1:5000/api/conteudos/${content._id}`);
+            const response = await fetch(`http://192.168.0.17:9000/api/conteudos/${content._id}`);
             if (response.ok) {
                 const data = await response.json();
                 setInternalContent(data);
@@ -24,7 +24,7 @@ const ContentTrackingModal = ({ content, onClose }) => {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const response = await fetch('http://127.0.0.1:5000/api/users');
+                const response = await fetch('http://192.168.0.17:9000/api/users');
                 if (response.ok) {
                     const data = await response.json();
                     setUsers(data);
@@ -66,7 +66,7 @@ const ContentTrackingModal = ({ content, onClose }) => {
                 data_conclusao: null
             };
 
-            const response = await fetch(`http://127.0.0.1:5000/api/conteudos/${content._id}`, {
+            const response = await fetch(`http://192.168.0.17:9000/api/conteudos/${content._id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedContent)

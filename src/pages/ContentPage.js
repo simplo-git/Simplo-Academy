@@ -18,7 +18,7 @@ const ContentPage = () => {
     // Fetch Contents
     const fetchContents = async () => {
         try {
-            const response = await fetch('http://127.0.0.1:5000/api/conteudos');
+            const response = await fetch('http://192.168.0.17:9000/api/conteudos');
             if (response.ok) {
                 const data = await response.json();
                 setContents(data);
@@ -40,7 +40,7 @@ const ContentPage = () => {
 
     const fetchRoles = async () => {
         try {
-            const response = await fetch('http://127.0.0.1:5000/api/roles');
+            const response = await fetch('http://192.168.0.17:9000/api/roles');
             if (response.ok) {
                 const data = await response.json();
                 setRoles(data);
@@ -67,7 +67,7 @@ const ContentPage = () => {
     const handleDelete = async (id) => {
         if (window.confirm('Tem certeza que deseja excluir este conteúdo?')) {
             try {
-                const response = await fetch(`http://127.0.0.1:5000/api/conteudos/${id}`, {
+                const response = await fetch(`http://192.168.0.17:9000/api/conteudos/${id}`, {
                     method: 'DELETE'
                 });
                 if (response.ok) {

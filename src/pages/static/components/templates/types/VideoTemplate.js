@@ -18,10 +18,10 @@ const VideoTemplate = ({ data, onChange, onRemove, index, hideRemove }) => {
             return;
         }
 
-        // Validate file size (max 50MB)
-        const maxSize = 50 * 1024 * 1024;
+        // Validate file size (max 500MB)
+        const maxSize = 500 * 1024 * 1024;
         if (file.size > maxSize) {
-            alert('O arquivo é muito grande. Tamanho máximo: 50MB. Para vídeos maiores, use URL externa.');
+            alert('O arquivo é muito grande. Tamanho máximo: 500MB. Para vídeos maiores, use URL externa.');
             return;
         }
 
@@ -101,7 +101,7 @@ const VideoTemplate = ({ data, onChange, onRemove, index, hideRemove }) => {
                             <div className="upload-placeholder">
                                 <span className="upload-icon">🎬</span>
                                 <p>Clique para selecionar um vídeo</p>
-                                <span className="upload-hint">MP4, WebM, OGG, MOV até 50MB</span>
+                                <span className="upload-hint">MP4, WebM, OGG, MOV até 500MB</span>
                             </div>
                         </div>
                     ) : (

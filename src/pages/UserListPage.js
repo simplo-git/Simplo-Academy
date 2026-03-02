@@ -17,7 +17,7 @@ const UserListPage = () => {
 
     const fetchUsers = async () => {
         try {
-            const response = await fetch('http://127.0.0.1:5000/api/users');
+            const response = await fetch('http://192.168.0.17:9000/api/users');
             if (response.ok) {
                 const data = await response.json();
                 setUsers(data);
@@ -34,7 +34,7 @@ const UserListPage = () => {
 
     const fetchRoles = async () => {
         try {
-            const response = await fetch('http://127.0.0.1:5000/api/roles');
+            const response = await fetch('http://192.168.0.17:9000/api/roles');
             if (response.ok) {
                 const data = await response.json();
                 setRoles(data);
@@ -47,7 +47,7 @@ const UserListPage = () => {
     const handleDelete = async (id) => {
         if (window.confirm('Tem certeza que deseja excluir este usuário?')) {
             try {
-                const response = await fetch(`http://127.0.0.1:5000/api/users/${id}`, {
+                const response = await fetch(`http://192.168.0.17:9000/api/users/${id}`, {
                     method: 'DELETE'
                 });
                 if (response.ok) {
