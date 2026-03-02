@@ -51,46 +51,59 @@ const Header = () => {
 
                 {isMenuOpen && (
                     <div className="dropdown-menu">
-                        <div className="dropdown-item" onClick={() => navigate('/users')}>
+                        <div className="dropdown-item" onClick={() => navigate('/home')}>
                             <span className="dropdown-icon">
                                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                                    <circle cx="8.5" cy="7" r="4" />
-                                    <line x1="20" y1="8" x2="20" y2="14" />
-                                    <line x1="23" y1="11" x2="17" y2="11" />
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
                                 </svg>
                             </span>
-                            Adicionar Colaborador
+                            Início
                         </div>
-                        <div className="dropdown-item" onClick={() => navigate('/roles')}>
-                            <span className="dropdown-icon">
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <rect x="3" y="3" width="7" height="7" />
-                                    <rect x="14" y="3" width="7" height="7" />
-                                    <rect x="14" y="14" width="7" height="7" />
-                                    <rect x="3" y="14" width="7" height="7" />
-                                </svg>
-                            </span>
-                            Setores
-                        </div>
-                        <div className="dropdown-item" onClick={() => navigate('/content')}>
-                            <span className="dropdown-icon">
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M22 10v6M2 10l10-5 10 5-10 5-10-5z" />
-                                    <path d="M6 12v5c3 3 9 3 12 0v-5" />
-                                </svg>
-                            </span>
-                            Adicionar Conteúdo
-                        </div>
-                        <div className="dropdown-item" onClick={() => navigate('/certificates')}>
-                            <span className="dropdown-icon">
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <circle cx="12" cy="8" r="7" />
-                                    <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
-                                </svg>
-                            </span>
-                            Certificações
-                        </div>
+                        {user?.tipo !== 'colaborador' && (
+                            <>
+                                <div className="dropdown-item" onClick={() => navigate('/users')}>
+                                    <span className="dropdown-icon">
+                                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                            <circle cx="8.5" cy="7" r="4" />
+                                            <line x1="20" y1="8" x2="20" y2="14" />
+                                            <line x1="23" y1="11" x2="17" y2="11" />
+                                        </svg>
+                                    </span>
+                                    Adicionar Colaborador
+                                </div>
+                                <div className="dropdown-item" onClick={() => navigate('/roles')}>
+                                    <span className="dropdown-icon">
+                                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <rect x="3" y="3" width="7" height="7" />
+                                            <rect x="14" y="3" width="7" height="7" />
+                                            <rect x="14" y="14" width="7" height="7" />
+                                            <rect x="3" y="14" width="7" height="7" />
+                                        </svg>
+                                    </span>
+                                    Setores
+                                </div>
+                                <div className="dropdown-item" onClick={() => navigate('/content')}>
+                                    <span className="dropdown-icon">
+                                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <path d="M22 10v6M2 10l10-5 10 5-10 5-10-5z" />
+                                            <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                                        </svg>
+                                    </span>
+                                    Adicionar Conteúdo
+                                </div>
+                                <div className="dropdown-item" onClick={() => navigate('/certificates')}>
+                                    <span className="dropdown-icon">
+                                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <circle cx="12" cy="8" r="7" />
+                                            <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
+                                        </svg>
+                                    </span>
+                                    Certificações
+                                </div>
+                            </>
+                        )}
                         <div className="dropdown-item" onClick={() => user && navigate(`/profile/${user.id || user._id}`)}>
                             <span className="dropdown-icon">
                                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
@@ -118,7 +131,7 @@ const Header = () => {
                             borderTop: '1px solid #eee',
                             marginTop: '5px'
                         }}>
-                            V-0.0.2-beta
+                            V-0.0.3-beta
                         </div>
                     </div>
                 )}

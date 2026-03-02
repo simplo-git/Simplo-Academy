@@ -14,6 +14,7 @@ const ContentPage = () => {
     const [isWizardOpen, setIsWizardOpen] = useState(false);
     const [editingContent, setEditingContent] = useState(null);
     const [trackingContent, setTrackingContent] = useState(null); // State for tracking modal
+    const [searchTerm, setSearchTerm] = useState('');
 
     // Fetch Contents
     const fetchContents = async () => {
@@ -95,9 +96,23 @@ const ContentPage = () => {
         <div className="home-container">
             <Header />
             <main className="main-content">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <h2 style={{ color: '#333' }}>Central de Conteúdos</h2>
-                    <div style={{ display: 'flex', gap: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '20px' }}>
+                    <h2 style={{ color: '#333', margin: 0 }}>Central de Conteúdos</h2>
+
+                    <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '15px' }}>
+                        <input
+                            type="text"
+                            placeholder="Pesquisar conteúdos..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            style={{
+                                padding: '10px 15px',
+                                borderRadius: '4px',
+                                border: '1px solid #ccc',
+                                width: '300px',
+                                maxWidth: '100%'
+                            }}
+                        />
                         <button
                             onClick={() => { setEditingContent(null); setIsWizardOpen(true); }}
                             style={{
@@ -146,15 +161,21 @@ const ContentPage = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {contents.length === 0 ? (
+                                {contents.filter(content => {
+                                    const term = searchTerm.toLowerCase();
+                                    return content.nome && content.nome.toLowerCase().includes(term);
+                                }).length === 0 ? (
                                     <tr>
                                         <td colSpan="5" style={{ padding: '40px', textAlign: 'center', color: '#888' }}>
                                             <div style={{ fontSize: '1.5rem', marginBottom: '10px' }}>📭</div>
-                                            Nenhum conteúdo cadastrado.
+                                            Nenhum conteúdo encontrado.
                                         </td>
                                     </tr>
                                 ) : (
-                                    contents.map(content => (
+                                    contents.filter(content => {
+                                        const term = searchTerm.toLowerCase();
+                                        return content.nome && content.nome.toLowerCase().includes(term);
+                                    }).map(content => (
                                         <tr key={content._id} style={{ borderBottom: '1px solid #eee' }}>
                                             <td style={{ padding: '15px' }}>
                                                 <div style={{ fontWeight: '600', color: '#333' }}>{content.nome}</div>

@@ -9,6 +9,7 @@ const RolesPage = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingRole, setEditingRole] = useState(null);
     const [formData, setFormData] = useState({ nome: '' });
+    const [searchTerm, setSearchTerm] = useState('');
 
     // Fetch Roles
     const fetchRoles = async () => {
@@ -97,22 +98,38 @@ const RolesPage = () => {
         <div className="home-container">
             <Header />
             <main className="main-content">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <h2 style={{ color: '#333' }}>Gestão de Setores</h2>
-                    <button
-                        onClick={() => handleOpenModal()}
-                        style={{
-                            padding: '10px 20px',
-                            backgroundColor: '#007bff',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontWeight: 'bold'
-                        }}
-                    >
-                        + Adicionar Setor
-                    </button>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '20px' }}>
+                    <h2 style={{ color: '#333', margin: 0 }}>Gestão de Setores</h2>
+
+                    <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '15px' }}>
+                        <input
+                            type="text"
+                            placeholder="Pesquisar setores..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            style={{
+                                padding: '10px 15px',
+                                borderRadius: '4px',
+                                border: '1px solid #ccc',
+                                width: '300px',
+                                maxWidth: '100%'
+                            }}
+                        />
+                        <button
+                            onClick={() => handleOpenModal()}
+                            style={{
+                                padding: '10px 20px',
+                                backgroundColor: '#007bff',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontWeight: 'bold'
+                            }}
+                        >
+                            + Adicionar Setor
+                        </button>
+                    </div>
                 </div>
 
                 {/* List */}
@@ -128,14 +145,20 @@ const RolesPage = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {roles.length === 0 ? (
+                                {roles.filter(role => {
+                                    const term = searchTerm.toLowerCase();
+                                    return role.nome && role.nome.toLowerCase().includes(term);
+                                }).length === 0 ? (
                                     <tr>
                                         <td colSpan="2" style={{ padding: '20px', textAlign: 'center', color: '#888' }}>
-                                            Nenhum Setor cadastrado.
+                                            Nenhum Setor encontrado.
                                         </td>
                                     </tr>
                                 ) : (
-                                    roles.map(role => (
+                                    roles.filter(role => {
+                                        const term = searchTerm.toLowerCase();
+                                        return role.nome && role.nome.toLowerCase().includes(term);
+                                    }).map(role => (
                                         <tr key={role._id} style={{ borderBottom: '1px solid #eee' }}>
                                             <td style={{ padding: '15px' }}>{role.nome}</td>
                                             <td style={{ padding: '15px' }}>

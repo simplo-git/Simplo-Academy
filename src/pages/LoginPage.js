@@ -10,7 +10,8 @@ function LoginPage() {
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    const handleLogin = async () => {
+    const handleLogin = async (e) => {
+        if (e) e.preventDefault();
         try {
             setError('');
             const response = await fetch('http://192.168.0.17:9000/api/users/login', {
@@ -47,7 +48,7 @@ function LoginPage() {
                 </div>
                 <h1 className="login-title">Simplo Academy</h1>
 
-                <div className="login-form">
+                <form className="login-form" onSubmit={handleLogin}>
                     <div className="input-group">
                         <label htmlFor="username">USUÁRIO</label>
                         <input
@@ -72,10 +73,10 @@ function LoginPage() {
 
                     {error && <p style={{ color: 'red', marginBottom: '10px' }}>{error}</p>}
 
-                    <button className="login-button" onClick={handleLogin}>
+                    <button type="submit" className="login-button">
                         ENTRAR <span className="arrow-icon">→</span>
                     </button>
-                </div>
+                </form>
             </div>
         </div>
     );

@@ -12,6 +12,7 @@ const CertificatesPage = () => {
     const [showConflictModal, setShowConflictModal] = useState(false);
     const [conflictingCerts, setConflictingCerts] = useState([]);
     const [pendingSave, setPendingSave] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const [formData, setFormData] = useState({
         nome: '',
@@ -420,9 +421,23 @@ const CertificatesPage = () => {
         <div className="home-container">
             <Header />
             <main className="main-content">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <h2 style={{ color: '#333' }}>Gestão de Certificados</h2>
-                    <div style={{ display: 'flex', gap: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '20px' }}>
+                    <h2 style={{ color: '#333', margin: 0 }}>Gestão de Certificados</h2>
+
+                    <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '15px' }}>
+                        <input
+                            type="text"
+                            placeholder="Pesquisar certificados..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            style={{
+                                padding: '10px 15px',
+                                borderRadius: '4px',
+                                border: '1px solid #ccc',
+                                width: '300px',
+                                maxWidth: '100%'
+                            }}
+                        />
                         <input
                             type="file"
                             multiple
@@ -478,14 +493,20 @@ const CertificatesPage = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {certificates.length === 0 ? (
+                                {certificates.filter(cert => {
+                                    const term = searchTerm.toLowerCase();
+                                    return cert.nome && cert.nome.toLowerCase().includes(term);
+                                }).length === 0 ? (
                                     <tr>
-                                        <td colSpan="4" style={{ padding: '20px', textAlign: 'center', color: '#888' }}>
-                                            Nenhum certificado cadastrado.
+                                        <td colSpan="5" style={{ padding: '20px', textAlign: 'center', color: '#888' }}>
+                                            Nenhum certificado encontrado.
                                         </td>
                                     </tr>
                                 ) : (
-                                    certificates.map(cert => (
+                                    certificates.filter(cert => {
+                                        const term = searchTerm.toLowerCase();
+                                        return cert.nome && cert.nome.toLowerCase().includes(term);
+                                    }).map(cert => (
                                         <tr key={cert._id} style={{ borderBottom: '1px solid #eee' }}>
                                             <td style={{ padding: '15px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

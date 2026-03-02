@@ -9,6 +9,7 @@ const UserListPage = () => {
     const [roles, setRoles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
         fetchUsers();
@@ -66,22 +67,38 @@ const UserListPage = () => {
         <div className="home-container">
             <Header />
             <main className="main-content">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <h2 style={{ color: '#333' }}>Gestão de Usuários</h2>
-                    <button
-                        onClick={() => navigate('/users/new')}
-                        style={{
-                            padding: '10px 20px',
-                            backgroundColor: '#007bff',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontWeight: 'bold'
-                        }}
-                    >
-                        + Adicionar Colaborador
-                    </button>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '20px' }}>
+                    <h2 style={{ color: '#333', margin: 0 }}>Gestão de Usuários</h2>
+
+                    <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '15px' }}>
+                        <input
+                            type="text"
+                            placeholder="Pesquisar usuários..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            style={{
+                                padding: '10px 15px',
+                                borderRadius: '4px',
+                                border: '1px solid #ccc',
+                                width: '300px',
+                                maxWidth: '100%'
+                            }}
+                        />
+                        <button
+                            onClick={() => navigate('/users/new')}
+                            style={{
+                                padding: '10px 20px',
+                                backgroundColor: '#007bff',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontWeight: 'bold'
+                            }}
+                        >
+                            + Adicionar Colaborador
+                        </button>
+                    </div>
                 </div>
 
                 {loading && <p>Carregando...</p>}
@@ -103,7 +120,16 @@ const UserListPage = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {users.map(user => (
+                                {users.filter(user => {
+                                    const term = searchTerm.toLowerCase();
+                                    const roleName = roles.find(role => role._id === user.setor)?.nome || user.setor || '';
+                                    return (
+                                        (user.nome && user.nome.toLowerCase().includes(term)) ||
+                                        (user.email && user.email.toLowerCase().includes(term)) ||
+                                        (user.cargo && user.cargo.toLowerCase().includes(term)) ||
+                                        (roleName.toLowerCase().includes(term))
+                                    );
+                                }).map(user => (
                                     <tr key={user._id} style={{ borderBottom: '1px solid #eee' }}>
                                         <td style={{ padding: '10px 15px' }}>
                                             {user.foto ? (

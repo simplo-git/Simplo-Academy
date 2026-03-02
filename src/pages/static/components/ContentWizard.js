@@ -13,6 +13,7 @@ const STEPS = [
 const ContentWizard = ({ onClose, onSuccess, initialData }) => {
     const [currentStep, setCurrentStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [validationError, setValidationError] = useState('');
 
     // Initial Data State
     const [formData, setFormData] = useState({
@@ -32,6 +33,11 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
     const [roles, setRoles] = useState([]); // New state for roles/sectors
     const [certificates, setCertificates] = useState([]); // New state for certificates
     const [loadingData, setLoadingData] = useState(false);
+
+    // Search states for wizards
+    const [templateSearchTerm, setTemplateSearchTerm] = useState('');
+    const [userSearchTerm, setUserSearchTerm] = useState('');
+    const [certSearchTerm, setCertSearchTerm] = useState('');
 
     // Initial Data Effect
     useEffect(() => {
@@ -135,12 +141,41 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
     }, [formData.conteudos, formData.correcao, templates]);
 
     const handleNext = () => {
+        setValidationError('');
+
+        // Validation per step
+        if (currentStep === 1) {
+            if (formData.nome.trim().length < 4) {
+                setValidationError('Por favor, informe um Nome do Conteúdo válido (mínimo 4 caracteres).');
+                return;
+            }
+            if (formData.descricao.trim().length < 5) {
+                setValidationError('A Descrição precisa ter no mínimo 5 caracteres.');
+                return;
+            }
+            if (formData.setores.length === 0) {
+                setValidationError('Selecione ao menos um Setor Relacionado.');
+                return;
+            }
+        }
+
+        if (currentStep === 2 && formData.conteudos.length === 0) {
+            setValidationError('Por favor, selecione ao menos um Template para prosseguir.');
+            return;
+        }
+
+        if (currentStep === 4 && Object.keys(formData.usuarios).length === 0) {
+            setValidationError('Selecione ao menos um Usuário para este conteúdo.');
+            return;
+        }
+
         if (currentStep < STEPS.length) {
             setCurrentStep(prev => prev + 1);
         }
     };
 
     const handleBack = () => {
+        setValidationError('');
         if (currentStep > 1) {
             setCurrentStep(prev => prev - 1);
         }
@@ -181,7 +216,7 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
     const renderStep1 = () => (
         <div className="step-content">
             <div className="form-group">
-                <label className="form-label">Nome do Conteúdo</label>
+                <label className="form-label">Nome do Conteúdo <span style={{ color: 'red' }}>*</span></label>
                 <input
                     className="form-input"
                     value={formData.nome}
@@ -190,13 +225,16 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
                 />
             </div>
             <div className="form-group">
-                <label className="form-label">Descrição</label>
+                <label className="form-label">Descrição <span style={{ color: 'red' }}>*</span></label>
                 <textarea
                     className="form-textarea"
                     value={formData.descricao}
                     onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                    placeholder="Descreva o objetivo deste conteúdo..."
+                    placeholder="Descreva o objetivo deste conteúdo... (mínimo 5 caracteres)"
                 />
+                <div style={{ fontSize: '0.8rem', color: formData.descricao.length >= 5 ? 'green' : '#dc3545', marginTop: '4px' }}>
+                    {formData.descricao.length < 5 ? `Faltam ${5 - formData.descricao.length} caracteres no mínimo.` : 'Mínimo de caracteres atingido.'}
+                </div>
             </div>
             <div className="form-group">
                 <label className="form-label">Setores Relacionados</label>
@@ -295,10 +333,25 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
                     {/* Left: Available */}
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                         <h4 style={{ color: '#555', marginBottom: '10px' }}>Templates Disponíveis</h4>
+                        <input
+                            type="text"
+                            placeholder="Pesquisar templates..."
+                            value={templateSearchTerm}
+                            onChange={(e) => setTemplateSearchTerm(e.target.value)}
+                            style={{
+                                marginBottom: '15px',
+                                padding: '8px 12px',
+                                borderRadius: '4px',
+                                border: '1px solid #ccc',
+                                width: '100%',
+                                boxSizing: 'border-box'
+                            }}
+                        />
                         <div className="selection-grid" style={{ overflowY: 'auto', maxHeight: '400px', alignContent: 'start' }}>
                             {loadingData ? <p>Carregando...</p> : (
                                 templates
                                     .filter(t => !formData.conteudos.includes(t._id))
+                                    .filter(t => t.nome && t.nome.toLowerCase().includes(templateSearchTerm.toLowerCase()))
                                     .map(t => (
                                         <div
                                             key={t._id}
@@ -421,10 +474,32 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
 
 
     const renderStep4 = () => {
-        // Filter users by selected sectors
-        const filteredUsers = users.filter(u => formData.setores.includes(u.setor));
+        // Filter users by selected sectors and search term
+        const term = userSearchTerm.toLowerCase();
+        const filteredUsers = users
+            .filter(u => formData.setores.includes(u.setor))
+            .filter(u => u.nome && u.nome.toLowerCase().includes(term));
+
         const selectedUserIds = Object.keys(formData.usuarios);
         const selectedUsersList = users.filter(u => selectedUserIds.includes(u._id));
+
+        const handleSelectAll = (select) => {
+            const newUsuarios = { ...formData.usuarios };
+            if (select) {
+                // Select all currently filtered users
+                filteredUsers.forEach(u => {
+                    newUsuarios[u._id] = { realizado: false, nota: null };
+                });
+            } else {
+                // Deselect only the currently filtered users
+                filteredUsers.forEach(u => {
+                    delete newUsuarios[u._id];
+                });
+            }
+            setFormData({ ...formData, usuarios: newUsuarios });
+        };
+
+        const allFilteredSelected = filteredUsers.length > 0 && filteredUsers.every(u => formData.usuarios[u._id]);
 
         return (
             <div className="step-content">
@@ -473,6 +548,36 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
                 </div>
 
                 <h4 style={{ marginTop: '0', marginBottom: '10px', color: '#555', fontSize: '0.95rem' }}>Disponíveis nos Setores Selecionados</h4>
+
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                    <input
+                        type="text"
+                        placeholder="Pesquisar usuários..."
+                        value={userSearchTerm}
+                        onChange={(e) => setUserSearchTerm(e.target.value)}
+                        style={{
+                            flex: 1,
+                            padding: '8px 12px',
+                            borderRadius: '4px',
+                            border: '1px solid #ccc'
+                        }}
+                    />
+                    <button
+                        onClick={() => handleSelectAll(!allFilteredSelected)}
+                        style={{
+                            padding: '8px 16px',
+                            backgroundColor: allFilteredSelected ? '#dc3545' : '#28a745',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontWeight: 'bold'
+                        }}
+                        disabled={filteredUsers.length === 0}
+                    >
+                        {allFilteredSelected ? 'Desmarcar Todos visíveis' : 'Selecionar Todos visíveis'}
+                    </button>
+                </div>
 
                 {filteredUsers.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '20px', color: '#888', border: '1px dashed #ddd', borderRadius: '8px' }}>
@@ -588,37 +693,55 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
     const renderStep6 = () => (
         <div className="step-content">
             <h3 style={{ marginBottom: '20px', color: '#333' }}>Selecione o Certificado (Opcional)</h3>
+            <input
+                type="text"
+                placeholder="Pesquisar certificados..."
+                value={certSearchTerm}
+                onChange={(e) => setCertSearchTerm(e.target.value)}
+                style={{
+                    marginBottom: '20px',
+                    padding: '8px 12px',
+                    borderRadius: '4px',
+                    border: '1px solid #ccc',
+                    width: '100%',
+                    boxSizing: 'border-box'
+                }}
+            />
             <div className="selection-grid">
                 {/* Option for No Certificate */}
-                <div
-                    className={`selection-card ${formData.certificado_id === null ? 'selected' : ''}`}
-                    onClick={() => setFormData({ ...formData, certificado_id: null })}
-                    style={{ borderStyle: 'dashed' }}
-                >
-                    <div className="card-icon">🚫</div>
-                    <div className="card-title">Sem Certificado</div>
-                </div>
+                {!certSearchTerm && (
+                    <div
+                        className={`selection-card ${formData.certificado_id === null ? 'selected' : ''}`}
+                        onClick={() => setFormData({ ...formData, certificado_id: null })}
+                        style={{ borderStyle: 'dashed' }}
+                    >
+                        <div className="card-icon">🚫</div>
+                        <div className="card-title">Sem Certificado</div>
+                    </div>
+                )}
 
                 {/* Available Certificates */}
-                {certificates.map(cert => (
-                    <div
-                        key={cert._id}
-                        className={`selection-card ${formData.certificado_id === cert._id ? 'selected' : ''}`}
-                        onClick={() => setFormData({ ...formData, certificado_id: cert._id })}
-                    >
-                        {cert.insignia ? (
-                            <img
-                                src={cert.insignia}
-                                alt={cert.nome}
-                                style={{ width: '50px', height: '50px', objectFit: 'contain', marginBottom: '10px' }}
-                            />
-                        ) : (
-                            <div className="card-icon">🎓</div>
-                        )}
-                        <div className="card-title">{cert.nome}</div>
-                        <div className="card-subtitle">{cert.nivel ? `Nível ${cert.nivel}` : ''}</div>
-                    </div>
-                ))}
+                {certificates
+                    .filter(cert => cert.nome && cert.nome.toLowerCase().includes(certSearchTerm.toLowerCase()))
+                    .map(cert => (
+                        <div
+                            key={cert._id}
+                            className={`selection-card ${formData.certificado_id === cert._id ? 'selected' : ''}`}
+                            onClick={() => setFormData({ ...formData, certificado_id: cert._id })}
+                        >
+                            {cert.insignia ? (
+                                <img
+                                    src={cert.insignia}
+                                    alt={cert.nome}
+                                    style={{ width: '50px', height: '50px', objectFit: 'contain', marginBottom: '10px' }}
+                                />
+                            ) : (
+                                <div className="card-icon">🎓</div>
+                            )}
+                            <div className="card-title">{cert.nome}</div>
+                            <div className="card-subtitle">{cert.nivel ? `Nível ${cert.nivel}` : ''}</div>
+                        </div>
+                    ))}
             </div>
         </div>
     );
@@ -656,6 +779,20 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
 
                 {/* Body */}
                 <div className="wizard-body">
+                    {validationError && (
+                        <div style={{
+                            backgroundColor: '#f8d7da',
+                            color: '#721c24',
+                            padding: '12px',
+                            marginBottom: '20px',
+                            borderRadius: '4px',
+                            border: '1px solid #f5c6cb',
+                            fontWeight: '500',
+                            textAlign: 'center'
+                        }}>
+                            {validationError}
+                        </div>
+                    )}
                     {currentStep === 1 && renderStep1()}
                     {currentStep === 2 && renderStep2()}
                     {currentStep === 3 && renderStep3()}
@@ -685,7 +822,7 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
                         <button
                             className="btn-primary"
                             onClick={handleNext}
-                            disabled={!isStepValid()}
+                        // Removed disabled={!isStepValid()} to allow the button to be clicked and show the alert
                         >
                             Próximo
                         </button>

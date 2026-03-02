@@ -11,6 +11,8 @@ import UserProfilePage from '../pages/UserProfilePage';
 import ContentPage from '../pages/ContentPage';
 import TemplatesPage from '../pages/TemplatesPage';
 import TemplateBuilder from '../pages/static/components/templates/TemplateBuilder';
+import Error404Page from '../pages/Error404Page';
+import Error500Page from '../pages/Error500Page';
 
 const AppRouter = () => {
     return (
@@ -31,7 +33,8 @@ const AppRouter = () => {
                     <Route path="/users/:id/edit" element={<UserRegisterPage />} />
                     <Route path="/profile/:id" element={<UserProfilePage />} />
                 </Route>
-                <Route path="*" element={<Navigate to="/login" replace />} />
+                <Route path="/500" element={<Error500Page />} />
+                <Route path="*" element={<Error404Page />} />
             </Routes>
         </BrowserRouter>
     );
