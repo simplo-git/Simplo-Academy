@@ -76,6 +76,15 @@ const UserProfilePage = () => {
     // Helper to format date (assuming UTC string or similar, fallback to today if missing)
     const formatDate = (dateString) => {
         if (!dateString) return new Date().toLocaleDateString('pt-BR'); // Fallback
+
+        // Ensure that strings like "2023-03-27" are not shifted backward 
+        // to "26/03/2023" because of the local timezone offset (UTC-3 for BRT).
+        // If it's pure YYYY-MM-DD, parsing it without timezone issues.
+        const [year, month, day] = dateString.split('T')[0].split('-');
+        if (year && month && day) {
+            return `${day}/${month}/${year}`;
+        }
+
         return new Date(dateString).toLocaleDateString('pt-BR');
     };
 
@@ -207,7 +216,7 @@ const UserProfilePage = () => {
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginTop: '10px', color: '#666', fontSize: '0.95rem' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span>📅</span> Desde: {formatDate(user.createdAt)}
+                                    <span>📅</span> Data de Admissão: {formatDate(user.dt_adminisao)}
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <span>🎓</span> Conteúdos Concluídos: {user.enrichedCertificates.length}

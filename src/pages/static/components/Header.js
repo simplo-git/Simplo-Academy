@@ -131,7 +131,7 @@ const Header = () => {
                             borderTop: '1px solid #eee',
                             marginTop: '5px'
                         }}>
-                            V-0.0.3-beta
+                            V-0.0.5-beta
                         </div>
                     </div>
                 )}

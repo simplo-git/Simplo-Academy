@@ -478,7 +478,11 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
         const term = userSearchTerm.toLowerCase();
         const filteredUsers = users
             .filter(u => formData.setores.includes(u.setor))
-            .filter(u => u.nome && u.nome.toLowerCase().includes(term));
+            .filter(u => {
+                const userName = u.nome ? u.nome.toLowerCase() : '';
+                const userCargo = u.cargo ? u.cargo.toLowerCase() : 'colaborador';
+                return userName.includes(term) || userCargo.includes(term);
+            });
 
         const selectedUserIds = Object.keys(formData.usuarios);
         const selectedUsersList = users.filter(u => selectedUserIds.includes(u._id));
@@ -552,7 +556,7 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
                 <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
                     <input
                         type="text"
-                        placeholder="Pesquisar usuários..."
+                        placeholder="Pesquisar por nome ou cargo..."
                         value={userSearchTerm}
                         onChange={(e) => setUserSearchTerm(e.target.value)}
                         style={{

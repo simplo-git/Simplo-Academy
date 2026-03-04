@@ -37,7 +37,7 @@ const DocumentActivity = ({ data, onAnswer, activityId, currentAnswer }) => {
             <div style={{ marginBottom: '20px' }}>
                 <div style={{ fontSize: '4rem', marginBottom: '10px' }}>📄</div>
                 <h3 style={{ margin: '0 0 10px 0', color: '#333' }}>{data.titulo}</h3>
-                <p style={{ color: '#666', lineHeight: '1.6' }}>{data.descricao}</p>
+                <div style={{ color: '#666', lineHeight: '1.6' }} dangerouslySetInnerHTML={{ __html: data.descricao }} />
             </div>
 
             {data.tipoArquivo && (

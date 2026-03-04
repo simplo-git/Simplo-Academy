@@ -11,3 +11,28 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Fix lateral scrolling for articles */
+.article-content-scroll img {
+  max-width: 100%;
+  height: auto;
+}
+
+.article-content-scroll pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.article-content-scroll p,
+.article-content-scroll span,
+.article-content-scroll div,
+.article-content-scroll h1,
+.article-content-scroll h2,
+.article-content-scroll h3,
+.article-content-scroll h4,
+.article-content-scroll h5,
+.article-content-scroll h6 {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+}

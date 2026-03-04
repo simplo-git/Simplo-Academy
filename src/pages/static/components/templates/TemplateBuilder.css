@@ -858,3 +858,9 @@
         width: 100%;
     }
 }
+
+/* Ocultar botões específicos do ReactQuill */
+.ql-toolbar button.ql-link,
+.ql-toolbar button.ql-clean {
+    display: none !important;
+}

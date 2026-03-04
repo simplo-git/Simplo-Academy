@@ -1,4 +1,6 @@
 import React from 'react';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 
 const TextoLivreTemplate = ({ data, onChange, onRemove, index, hideRemove }) => {
     const handleChange = (field, value) => {
@@ -22,12 +24,12 @@ const TextoLivreTemplate = ({ data, onChange, onRemove, index, hideRemove }) => 
             <div className="template-card-body">
                 <div className="form-group">
                     <label className="form-label">Enunciado da Atividade</label>
-                    <textarea
-                        className="form-textarea"
-                        placeholder="Digite o enunciado ou pergunta..."
-                        rows={4}
+                    <ReactQuill
+                        theme="snow"
                         value={data.enunciado || ''}
-                        onChange={(e) => handleChange('enunciado', e.target.value)}
+                        onChange={(content) => handleChange('enunciado', content)}
+                        placeholder="Digite o enunciado ou pergunta..."
+                        style={{ backgroundColor: 'white', marginBottom: '10px' }}
                     />
                 </div>
 
@@ -56,14 +58,14 @@ const TextoLivreTemplate = ({ data, onChange, onRemove, index, hideRemove }) => 
                     </div>
                 </div>
 
-                <div className="form-group">
+                <div className="form-group" style={{ marginTop: '20px' }}>
                     <label className="form-label">Orientações para resposta (opcional)</label>
-                    <textarea
-                        className="form-textarea"
-                        placeholder="Ex: Fundamente sua resposta com exemplos práticos..."
-                        rows={2}
+                    <ReactQuill
+                        theme="snow"
                         value={data.orientacoes || ''}
-                        onChange={(e) => handleChange('orientacoes', e.target.value)}
+                        onChange={(content) => handleChange('orientacoes', content)}
+                        placeholder="Ex: Fundamente sua resposta com exemplos práticos..."
+                        style={{ backgroundColor: 'white', marginBottom: '10px' }}
                     />
                 </div>
 

@@ -1,51 +1,52 @@
 import React, { useState, useEffect } from 'react';
 
 const QuizActivity = ({ data, context, currentAnswer, onActivityCompleted }) => {
-    const [selectedOption, setSelectedOption] = useState(null);
+    // Array of selected options. Index corresponds to the question index.
+    const [selectedOptions, setSelectedOptions] = useState({});
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
-    const [isCorrect, setIsCorrect] = useState(null);
+    const [isCorrect, setIsCorrect] = useState(null); // Will now reflect if the person passed (overall) or maybe store an array of correctness
 
-    // Initial load check and State Reset on change
+    const questoes = data.questoes || (data.pergunta ? [{ pergunta: data.pergunta, opcoes: data.opcoes || [] }] : []);
+
     useEffect(() => {
-        console.log("Quiz useEffect Update:", { currentAnswer, templateId: context.templateId });
-
         if (currentAnswer) {
             setSubmitted(true);
+
+            // Retrocompatibility: If it was a single number, map it to question 0
             if (currentAnswer.resposta !== undefined) {
-                setSelectedOption(currentAnswer.resposta);
+                if (typeof currentAnswer.resposta === 'number' || typeof currentAnswer.resposta === 'string') {
+                    setSelectedOptions({ 0: Number(currentAnswer.resposta) });
+                } else if (typeof currentAnswer.resposta === 'object') {
+                    // Assuming it's the new format: dictionary or array
+                    setSelectedOptions(currentAnswer.resposta);
+                }
             }
 
-            // Should be robust: check if nota exists and is > 0
-            // Also handle if nota is string '100'
             const score = Number(currentAnswer.nota);
             const isPassing = !isNaN(score) && score > 0;
-            console.log("Quiz Correction Check:", {
-                rawNota: currentAnswer.nota,
-                parsedScore: score,
-                isPassing
-            });
-
             setIsCorrect(isPassing);
         } else {
-            // New activity or not answered yet - RESET state
-            setSelectedOption(null);
+            setSelectedOptions({});
             setSubmitted(false);
             setIsCorrect(null);
         }
     }, [currentAnswer, context.templateId]);
 
-    const handleSelect = async (index) => {
-        if (submitted) return; // Prevent change if already submitted
+    const handleSelect = (qIndex, optIndex) => {
+        if (submitted || submitting) return;
+        setSelectedOptions(prev => ({
+            ...prev,
+            [qIndex]: optIndex
+        }));
+    };
 
-        setSelectedOption(index);
-
-        // Auto-submit functionality could be here, but let's use a explicit "Confirmar" button 
-        // OR submit immediately on click if desired. Let's do explicit button for better UX.
+    const isAllAnswered = () => {
+        return questoes.every((_, qIndex) => selectedOptions[qIndex] !== undefined && selectedOptions[qIndex] !== null);
     };
 
     const handleSubmit = async () => {
-        if (selectedOption === null || submitting) return;
+        if (!isAllAnswered() || submitting) return;
 
         if (!context || !context.contentId || !context.userId) {
             console.error("Missing context for quiz submission");
@@ -54,43 +55,26 @@ const QuizActivity = ({ data, context, currentAnswer, onActivityCompleted }) => 
 
         setSubmitting(true);
 
-        // Check correctness locally
-        // The template saves 'correta' boolean inside the option object in 'opcoes' array
-        // Find the index of the correct option
-        const correctIndex = data.opcoes ? data.opcoes.findIndex(op => op.correta === true || String(op.correta) === 'true') : -1;
+        // Calculate score locally
+        let correctCount = 0;
 
-        console.log("Quiz Debug:", {
-            selectedOption,
-            selectedType: typeof selectedOption,
-            correctIndex,
-            correctType: typeof correctIndex,
-            comparison: Number(correctIndex) === Number(selectedOption),
-            options: data.opcoes
+        questoes.forEach((q, qIndex) => {
+            const correctIndex = q.opcoes ? q.opcoes.findIndex(op => op.correta === true || String(op.correta) === 'true') : -1;
+            if (correctIndex !== -1 && Number(selectedOptions[qIndex]) === Number(correctIndex)) {
+                correctCount++;
+            }
         });
 
-        let grade = null;
-        let done = false;
-        let correctness = null;
-
-        if (correctIndex !== -1) {
-            correctness = (Number(correctIndex) === Number(selectedOption));
-            grade = correctness ? 100 : 0;
-            done = true;
-            setIsCorrect(correctness);
-        } else {
-            // If no correct answer defined, treat as survey? Or always correct?
-            // Let's assume manual or just done. 
-            // If user requested stricter logic rework, we assume there IS a correct answer.
-            console.warn("Nenhuma resposta correta definida no template");
-            done = true;
-        }
+        const grade = questoes.length > 0 ? (correctCount / questoes.length) * 100 : 0;
+        const correctness = grade > 0; // We define correctness as having at least some correct
+        setIsCorrect(correctness);
 
         const payload = {
             user_id: context.userId,
             template_id: context.templateId,
             tipo: 'multipla_escolha',
-            resposta: selectedOption, // Sending the index
-            realizado: true, // Mark as done for navigation purposes (even if wrong, the activity is "done")
+            resposta: selectedOptions, // Sending the mapping of responses
+            realizado: true,
             data_conclusao: new Date().toISOString(),
             nota: grade
         };
@@ -107,10 +91,7 @@ const QuizActivity = ({ data, context, currentAnswer, onActivityCompleted }) => 
             if (response.ok) {
                 const responseData = await response.json();
 
-                // If backend returns explicit correctness, trust it over local calc
-                if (responseData.correta !== undefined) {
-                    setIsCorrect(responseData.correta === true || responseData.correta === 'true');
-                }
+                // If backend returns a calculated score, use it (optional)
 
                 setSubmitted(true);
                 if (onActivityCompleted) {
@@ -128,104 +109,129 @@ const QuizActivity = ({ data, context, currentAnswer, onActivityCompleted }) => 
     };
 
     return (
-        <div className="activity-quiz" style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'left' }}>
-            <h3 style={{ marginBottom: '20px' }}>{data.pergunta || 'Selecione a resposta correta:'}</h3>
+        <div className="activity-quiz" style={{ maxWidth: '700px', margin: '0 auto', textAlign: 'left' }}>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {data.opcoes && data.opcoes.map((op, idx) => {
-                    let borderColor = '#ddd';
-                    let bgColor = 'white';
+            {questoes.map((questao, qIndex) => (
+                <div key={qIndex} style={{
+                    marginBottom: '30px',
+                    padding: '20px',
+                    backgroundColor: 'white',
+                    borderRadius: '8px',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
+                    border: '1px solid #f0f0f0'
+                }}>
+                    <h3 style={{ marginBottom: '20px', whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>
+                        <span style={{ color: '#007bff', marginRight: '10px' }}>{qIndex + 1}.</span>
+                        {questao.pergunta ? (
+                            <span dangerouslySetInnerHTML={{ __html: questao.pergunta }} />
+                        ) : (
+                            <span>Selecione a resposta correta:</span>
+                        )}
+                    </h3>
 
-                    // Extract text if op is object
-                    const opText = typeof op === 'object' ? op.texto : op;
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {questao.opcoes && questao.opcoes.map((op, idx) => {
+                            let borderColor = '#ddd';
+                            let bgColor = 'white';
 
-                    if (submitted) {
-                        // Show result state
-                        if (idx === selectedOption) {
-                            if (isCorrect === true) {
-                                borderColor = '#28a745';
-                                bgColor = '#d4edda';
-                            } else if (isCorrect === false) {
-                                borderColor = '#dc3545';
-                                bgColor = '#f8d7da';
-                            } else {
+                            const opText = typeof op === 'object' ? op.texto : op;
+                            const isSelected = selectedOptions[qIndex] === idx;
+
+                            if (submitted) {
+                                const correctIdx = questao.opcoes.findIndex(o => o.correta === true || String(o.correta) === 'true');
+                                const isOptionCorrect = correctIdx === idx;
+
+                                if (isSelected) {
+                                    if (isOptionCorrect) {
+                                        borderColor = '#28a745';
+                                        bgColor = '#d4edda';
+                                    } else {
+                                        borderColor = '#dc3545';
+                                        bgColor = '#f8d7da';
+                                    }
+                                } else if (isOptionCorrect) {
+                                    borderColor = '#28a745';
+                                }
+                            } else if (isSelected) {
                                 borderColor = '#007bff';
-                                bgColor = '#cce5ff';
+                                bgColor = '#f0f8ff';
                             }
-                        }
-                        // Highlight correct answer if known and we got it wrong
-                        const correctIdx = data.opcoes ? data.opcoes.findIndex(op => op.correta === true || String(op.correta) === 'true') : -1;
-                        if (isCorrect === false && idx === correctIdx) {
-                            borderColor = '#28a745';
-                            // border only to show what was right
-                        }
-                    } else if (selectedOption === idx) {
-                        borderColor = '#007bff';
-                        bgColor = '#f0f8ff';
-                    }
 
-                    return (
-                        <button
-                            key={idx}
-                            onClick={() => handleSelect(idx)}
-                            disabled={submitted || submitting}
-                            style={{
-                                padding: '15px',
-                                textAlign: 'left',
-                                borderRadius: '8px',
-                                border: `2px solid ${borderColor}`,
-                                backgroundColor: bgColor,
-                                cursor: submitted ? 'default' : 'pointer',
-                                transition: 'all 0.2s',
-                                fontWeight: selectedOption === idx ? 'bold' : 'normal'
-                            }}
-                        >
-                            {opText}
-                        </button>
-                    );
-                })}
-            </div>
+                            return (
+                                <button
+                                    key={idx}
+                                    onClick={() => handleSelect(qIndex, idx)}
+                                    disabled={submitted || submitting}
+                                    style={{
+                                        padding: '15px',
+                                        textAlign: 'left',
+                                        borderRadius: '8px',
+                                        border: `2px solid ${borderColor}`,
+                                        backgroundColor: bgColor,
+                                        cursor: submitted ? 'default' : 'pointer',
+                                        transition: 'all 0.2s',
+                                        fontWeight: isSelected ? 'bold' : 'normal',
+                                        display: 'flex',
+                                        alignItems: 'center'
+                                    }}
+                                >
+                                    <div style={{
+                                        width: '20px',
+                                        height: '20px',
+                                        borderRadius: '50%',
+                                        border: `2px solid ${isSelected ? (submitted ? borderColor : '#007bff') : '#ccc'}`,
+                                        marginRight: '15px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        backgroundColor: isSelected ? (submitted ? borderColor : '#007bff') : 'transparent'
+                                    }}>
+                                        {isSelected && <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'white' }}></span>}
+                                    </div>
+                                    <span style={{ flex: 1 }}>{opText}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            ))}
 
             {!submitted && (
                 <button
                     onClick={handleSubmit}
-                    disabled={selectedOption === null || submitting}
+                    disabled={!isAllAnswered() || submitting}
                     style={{
-                        marginTop: '20px',
-                        padding: '10px 20px',
-                        backgroundColor: (selectedOption === null || submitting) ? '#ccc' : '#007bff',
+                        marginTop: '10px',
+                        padding: '15px 20px',
+                        backgroundColor: (!isAllAnswered() || submitting) ? '#ccc' : '#007bff',
                         color: 'white',
                         border: 'none',
                         borderRadius: '5px',
-                        cursor: (selectedOption === null || submitting) ? 'not-allowed' : 'pointer',
+                        cursor: (!isAllAnswered() || submitting) ? 'not-allowed' : 'pointer',
                         width: '100%',
-                        fontSize: '1rem'
+                        fontSize: '1.1rem',
+                        fontWeight: 'bold',
+                        transition: 'backgroundColor 0.3s'
                     }}
                 >
-                    {submitting ? 'Enviando...' : 'Confirmar Resposta'}
+                    {submitting ? 'Enviando...' : (isAllAnswered() ? 'Confirmar Respostas' : 'Responda todas as questões para confirmar')}
                 </button>
             )}
 
             {submitted && isCorrect !== null && (
                 <div style={{
-                    marginTop: '20px', padding: '15px', borderRadius: '5px',
+                    marginTop: '20px', padding: '20px', borderRadius: '8px',
                     backgroundColor: isCorrect ? '#d4edda' : '#f8d7da',
-                    color: isCorrect ? '#155724' : '#721c24'
+                    color: isCorrect ? '#155724' : '#721c24',
+                    textAlign: 'center',
+                    border: `1px solid ${isCorrect ? '#c3e6cb' : '#f5c6cb'}`
                 }}>
-                    <strong>{isCorrect ? 'Resposta Correta!' : 'Resposta Incorreta.'}</strong>
-                    {!isCorrect && (
-                        <div style={{ marginTop: '5px', fontSize: '0.9rem' }}>
-                            {(() => {
-                                const correctIdx = data.opcoes ? data.opcoes.findIndex(op => op.correta === true || String(op.correta) === 'true') : -1;
-                                if (correctIdx !== -1) {
-                                    const correctOp = data.opcoes[correctIdx];
-                                    const correctText = typeof correctOp === 'object' ? correctOp.texto : correctOp;
-                                    return `A resposta correta era: "${correctText}"`;
-                                }
-                                return '';
-                            })()}
-                        </div>
-                    )}
+                    <strong style={{ fontSize: '1.2rem' }}>
+                        {isCorrect ? 'Bom trabalho!' : 'Você pode melhorar!'}
+                    </strong>
+                    <div style={{ marginTop: '10px', fontSize: '1rem' }}>
+                        Pontuação Obtida: <strong>{(currentAnswer?.nota) ? Number(currentAnswer.nota).toFixed(1) : (isCorrect ? '100' : '0')}</strong> de 100
+                    </div>
                 </div>
             )}
         </div>

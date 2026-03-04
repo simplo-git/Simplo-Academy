@@ -1,4 +1,6 @@
 import React, { useRef } from 'react';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 
 const VideoTemplate = ({ data, onChange, onRemove, index, hideRemove }) => {
     const fileInputRef = useRef(null);
@@ -124,14 +126,18 @@ const VideoTemplate = ({ data, onChange, onRemove, index, hideRemove }) => {
                     )}
                 </div>
 
-                <div className="form-group">
+                <div className="form-group" style={{ marginBottom: '25px' }}>
                     <label className="form-label">Descrição (opcional)</label>
-                    <textarea
-                        className="form-textarea"
-                        placeholder="Descreva o conteúdo do vídeo..."
-                        rows={3}
+                    <ReactQuill
+                        theme="snow"
                         value={data.descricao || ''}
-                        onChange={(e) => handleChange('descricao', e.target.value)}
+                        onChange={(content) => handleChange('descricao', content)}
+                        placeholder="Descreva o conteúdo do vídeo..."
+                        style={{
+                            backgroundColor: 'white',
+                            borderRadius: '6px',
+                            minHeight: '80px'
+                        }}
                     />
                 </div>
 

@@ -1,4 +1,6 @@
 import React from 'react';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 
 const UploadTemplate = ({ data, onChange, onRemove, index, hideRemove }) => {
     const handleChange = (field, value) => {
@@ -48,14 +50,18 @@ const UploadTemplate = ({ data, onChange, onRemove, index, hideRemove }) => {
                     />
                 </div>
 
-                <div className="form-group">
+                <div className="form-group" style={{ marginBottom: '25px' }}>
                     <label className="form-label">Instruções para upload</label>
-                    <textarea
-                        className="form-textarea"
-                        placeholder="Descreva o que deve ser enviado..."
-                        rows={3}
+                    <ReactQuill
+                        theme="snow"
                         value={data.instrucoes || ''}
-                        onChange={(e) => handleChange('instrucoes', e.target.value)}
+                        onChange={(content) => handleChange('instrucoes', content)}
+                        placeholder="Descreva o que deve ser enviado..."
+                        style={{
+                            backgroundColor: 'white',
+                            borderRadius: '6px',
+                            minHeight: '80px'
+                        }}
                     />
                 </div>
 

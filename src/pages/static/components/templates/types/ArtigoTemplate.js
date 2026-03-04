@@ -1,42 +1,10 @@
 import React from 'react';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 
 const ArtigoTemplate = ({ data, onChange, onRemove, index, hideRemove }) => {
     const handleChange = (field, value) => {
         onChange(index, { ...data, [field]: value });
-    };
-
-    const applyFormatting = (format) => {
-        const textarea = document.getElementById(`artigo-content-${index}`);
-        if (!textarea) return;
-
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const text = data.conteudo || '';
-        const selectedText = text.substring(start, end);
-
-        let formattedText = '';
-        switch (format) {
-            case 'bold':
-                formattedText = `**${selectedText}**`;
-                break;
-            case 'italic':
-                formattedText = `*${selectedText}*`;
-                break;
-            case 'heading':
-                formattedText = `\n## ${selectedText}`;
-                break;
-            case 'list':
-                formattedText = `\n- ${selectedText}`;
-                break;
-            case 'link':
-                formattedText = `[${selectedText}](url)`;
-                break;
-            default:
-                formattedText = selectedText;
-        }
-
-        const newText = text.substring(0, start) + formattedText + text.substring(end);
-        handleChange('conteudo', newText);
     };
 
     return (
@@ -65,99 +33,23 @@ const ArtigoTemplate = ({ data, onChange, onRemove, index, hideRemove }) => {
                     />
                 </div>
 
-                <div className="form-group">
-                    <label className="form-label">Resumo (opcional)</label>
-                    <textarea
-                        className="form-textarea"
-                        placeholder="Breve resumo do artigo..."
-                        rows={2}
-                        value={data.resumo || ''}
-                        onChange={(e) => handleChange('resumo', e.target.value)}
-                    />
-                </div>
+                <div className="form-group" style={{ marginBottom: '25px' }}>
 
-                <div className="form-group">
+
                     <label className="form-label">Conteúdo do Artigo</label>
-                    <div className="editor-toolbar">
-                        <button
-                            type="button"
-                            className="toolbar-btn"
-                            onClick={() => applyFormatting('bold')}
-                            title="Negrito"
-                        >
-                            <strong>B</strong>
-                        </button>
-                        <button
-                            type="button"
-                            className="toolbar-btn"
-                            onClick={() => applyFormatting('italic')}
-                            title="Itálico"
-                        >
-                            <em>I</em>
-                        </button>
-                        <button
-                            type="button"
-                            className="toolbar-btn"
-                            onClick={() => applyFormatting('heading')}
-                            title="Título"
-                        >
-                            H
-                        </button>
-                        <button
-                            type="button"
-                            className="toolbar-btn"
-                            onClick={() => applyFormatting('list')}
-                            title="Lista"
-                        >
-                            ☰
-                        </button>
-                        <button
-                            type="button"
-                            className="toolbar-btn"
-                            onClick={() => applyFormatting('link')}
-                            title="Link"
-                        >
-                            🔗
-                        </button>
-                    </div>
-                    <textarea
-                        id={`artigo-content-${index}`}
-                        className="form-textarea artigo-editor"
-                        placeholder="Escreva o conteúdo do artigo aqui...
-
-Você pode usar markdown para formatação:
-**texto em negrito**
-*texto em itálico*
-## Títulos
-- Listas"
-                        rows={12}
+                    <ReactQuill
+                        theme="snow"
                         value={data.conteudo || ''}
-                        onChange={(e) => handleChange('conteudo', e.target.value)}
+                        onChange={(content) => handleChange('conteudo', content)}
+                        placeholder="Escreva o conteúdo do artigo aqui..."
+                        style={{
+                            backgroundColor: 'white',
+                            borderRadius: '6px',
+                            minHeight: '200px'
+                        }}
                     />
                 </div>
 
-                <div className="form-row">
-                    <div className="form-group half">
-                        <label className="form-label">Tempo de leitura estimado</label>
-                        <input
-                            type="text"
-                            className="form-input"
-                            placeholder="Ex: 5 min"
-                            value={data.tempoLeitura || ''}
-                            onChange={(e) => handleChange('tempoLeitura', e.target.value)}
-                        />
-                    </div>
-                    <div className="form-group half">
-                        <label className="form-label">Autor (opcional)</label>
-                        <input
-                            type="text"
-                            className="form-input"
-                            placeholder="Nome do autor"
-                            value={data.autor || ''}
-                            onChange={(e) => handleChange('autor', e.target.value)}
-                        />
-                    </div>
-                </div>
 
                 <div className="form-group checkbox-group">
                     <label className="checkbox-container">

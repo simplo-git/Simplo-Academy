@@ -66,7 +66,13 @@ const UserAnswersView = ({ content, user, onClose, onReset, onUpdate }) => {
     const renderAnswerValue = (ans) => {
         if (ans === null || ans === undefined) return '-';
         if (typeof ans === 'boolean') return ans ? 'Verdadeiro' : 'Falso';
-        if (typeof ans === 'object') return JSON.stringify(ans);
+        if (typeof ans === 'object') {
+            const keys = Object.keys(ans);
+            if (keys.length > 0 && !isNaN(keys[0])) {
+                return Object.entries(ans).map(([qIdx, optIdx]) => `Q${Number(qIdx) + 1}: Opção ${Number(optIdx) + 1}`).join(' | ');
+            }
+            return JSON.stringify(ans);
+        }
         return ans.toString();
     };
 

@@ -94,7 +94,7 @@ const VideoActivity = ({ data, context, currentAnswer, onActivityCompleted }) =>
                 </p>
             )}
 
-            {data.descricao && <p style={{ marginTop: '15px', color: '#555' }}>{data.descricao}</p>}
+            {data.descricao && <div style={{ marginTop: '15px', color: '#555' }} dangerouslySetInnerHTML={{ __html: data.descricao }} />}
         </div>
     );
 };

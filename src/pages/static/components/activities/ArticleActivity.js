@@ -99,6 +99,9 @@ const ArticleActivity = ({ data, onAnswer, activityId, currentAnswer }) => {
                 style={{
                     maxHeight: '60vh',
                     overflowY: 'auto',
+                    overflowX: 'hidden',
+                    wordWrap: 'break-word',
+                    overflowWrap: 'break-word',
                     padding: '20px',
                     border: '1px solid #eee',
                     borderRadius: '8px',

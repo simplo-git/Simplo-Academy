@@ -95,7 +95,7 @@ const UploadActivity = ({ data, onAnswer, currentAnswer, activityId }) => {
 
             {data.instrucoes && (
                 <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '5px', borderLeft: '4px solid #007bff' }}>
-                    <p style={{ margin: 0, color: '#555' }}>{data.instrucoes}</p>
+                    <div style={{ margin: 0, color: '#555' }} dangerouslySetInnerHTML={{ __html: data.instrucoes }} />
                 </div>
             )}
 

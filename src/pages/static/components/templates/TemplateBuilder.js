@@ -34,10 +34,14 @@ const TemplateBuilder = () => {
         switch (tipo) {
             case 'multipla_escolha':
                 return {
-                    pergunta: '',
-                    opcoes: [
-                        { texto: '', correta: false },
-                        { texto: '', correta: false }
+                    questoes: [
+                        {
+                            pergunta: '',
+                            opcoes: [
+                                { texto: '', correta: false },
+                                { texto: '', correta: false }
+                            ]
+                        }
                     ],
                     obrigatorio: true
                 };
@@ -50,7 +54,7 @@ const TemplateBuilder = () => {
             case 'documento':
                 return { titulo: '', descricao: '', arquivo: null, nomeArquivo: null, tipoArquivo: null, tamanhoArquivo: null, permitirDownload: true, obrigatorio: false };
             case 'artigo':
-                return { titulo: '', resumo: '', conteudo: '', tempoLeitura: '', autor: '', obrigatorio: false };
+                return { titulo: '', conteudo: '', tempoLeitura: '', autor: '', obrigatorio: false };
             default:
                 return {};
         }

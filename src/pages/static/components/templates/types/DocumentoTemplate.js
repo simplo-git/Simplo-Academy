@@ -1,4 +1,6 @@
 import React, { useRef } from 'react';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 
 const DocumentoTemplate = ({ data, onChange, onRemove, index, hideRemove }) => {
     const fileInputRef = useRef(null);
@@ -99,14 +101,18 @@ const DocumentoTemplate = ({ data, onChange, onRemove, index, hideRemove }) => {
                     />
                 </div>
 
-                <div className="form-group">
+                <div className="form-group" style={{ marginBottom: '25px' }}>
                     <label className="form-label">Descrição</label>
-                    <textarea
-                        className="form-textarea"
-                        placeholder="Breve descrição do documento..."
-                        rows={2}
+                    <ReactQuill
+                        theme="snow"
                         value={data.descricao || ''}
-                        onChange={(e) => handleChange('descricao', e.target.value)}
+                        onChange={(content) => handleChange('descricao', content)}
+                        placeholder="Breve descrição do documento..."
+                        style={{
+                            backgroundColor: 'white',
+                            borderRadius: '6px',
+                            minHeight: '80px'
+                        }}
                     />
                 </div>
 
