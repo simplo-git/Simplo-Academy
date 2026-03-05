@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getUser } from '../auth/auth';
 import Header from './static/components/Header';
 import ContentWizard from './static/components/ContentWizard';
 import ContentTrackingModal from './static/components/ContentTrackingModal';
@@ -15,6 +16,9 @@ const ContentPage = () => {
     const [editingContent, setEditingContent] = useState(null);
     const [trackingContent, setTrackingContent] = useState(null); // State for tracking modal
     const [searchTerm, setSearchTerm] = useState('');
+
+    const currentUser = getUser();
+    const isAdmin = currentUser?.setor === '69a847c60c6dcf1cde3c2d2d';
 
     // Fetch Contents
     const fetchContents = async () => {
@@ -162,6 +166,17 @@ const ContentPage = () => {
                             </thead>
                             <tbody>
                                 {contents.filter(content => {
+                                    // Restrict visibility by sector
+                                    if (!isAdmin) {
+                                        const contentSetoresIds = content.setores
+                                            ? content.setores.map(s => typeof s === 'object' ? s._id || s.id : s)
+                                            : (content.setor ? [typeof content.setor === 'object' ? content.setor._id || content.setor.id : content.setor] : []);
+
+                                        if (!contentSetoresIds.includes(currentUser?.setor) && currentUser?.setor) {
+                                            return false;
+                                        }
+                                    }
+
                                     const term = searchTerm.toLowerCase();
                                     return content.nome && content.nome.toLowerCase().includes(term);
                                 }).length === 0 ? (
@@ -173,6 +188,16 @@ const ContentPage = () => {
                                     </tr>
                                 ) : (
                                     contents.filter(content => {
+                                        if (!isAdmin) {
+                                            const contentSetoresIds = content.setores
+                                                ? content.setores.map(s => typeof s === 'object' ? s._id || s.id : s)
+                                                : (content.setor ? [typeof content.setor === 'object' ? content.setor._id || content.setor.id : content.setor] : []);
+
+                                            if (!contentSetoresIds.includes(currentUser?.setor) && currentUser?.setor) {
+                                                return false;
+                                            }
+                                        }
+
                                         const term = searchTerm.toLowerCase();
                                         return content.nome && content.nome.toLowerCase().includes(term);
                                     }).map(content => (

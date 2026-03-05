@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { getUser } from '../../../../auth/auth';
 import MultiplaEscolhaTemplate from './types/MultiplaEscolhaTemplate';
 import VideoTemplate from './types/VideoTemplate';
 import TextoLivreTemplate from './types/TextoLivreTemplate';
@@ -16,10 +17,15 @@ const TemplateBuilder = () => {
     const [templateData, setTemplateData] = useState({
         nome: '',
         tipo: 'multipla_escolha',
+        setor: '', // Added setor
         descricao: '',
         template: {} // Dados da atividade única
     });
     const [saving, setSaving] = useState(false);
+    const [roles, setRoles] = useState([]);
+
+    const currentUser = getUser();
+    const isAdmin = currentUser?.setor === '69a847c60c6dcf1cde3c2d2d';
 
     const activityTypes = [
         { tipo: 'multipla_escolha', label: 'Múltipla Escolha', icon: '❓' },
@@ -62,16 +68,42 @@ const TemplateBuilder = () => {
 
     // Fetch template if editing
     useEffect(() => {
+        fetchRoles();
         if (isEditing) {
             fetchTemplate();
         } else {
             // Set default data for initial type
             setTemplateData(prev => ({
                 ...prev,
-                template: getDefaultDataForType(prev.tipo)
+                template: getDefaultDataForType(prev.tipo),
+                setor: currentUser?.setor && !isAdmin ? currentUser.setor : '' // Default to user's sector if not Admin
             }));
         }
     }, [id]);
+
+    const fetchRoles = async () => {
+        try {
+            const response = await fetch('http://192.168.0.17:9000/api/roles');
+            if (response.ok) {
+                const data = await response.json();
+                if (isAdmin) {
+                    setRoles(data);
+                } else if (currentUser?.setor) {
+                    setRoles(data.filter(r => r._id === currentUser.setor));
+                    // Ensure templateData visually updates to the current user's sector if it's empty
+                    setTemplateData(prev => {
+                        if (!prev.setor && !isEditing) {
+                            return { ...prev, setor: currentUser.setor };
+                        }
+                        return prev;
+                    });
+                }
+            }
+        } catch (err) {
+            console.error('Erro ao carregar roles:', err);
+        }
+    };
+
 
     const fetchTemplate = async () => {
         try {
@@ -87,6 +119,7 @@ const TemplateBuilder = () => {
                 setTemplateData({
                     nome: data.nome || '',
                     tipo: data.tipo || 'multipla_escolha',
+                    setor: typeof data.setor === 'object' ? data.setor._id || data.setor.id : data.setor || '',
                     descricao: data.descricao || '',
                     template: effectiveTemplate
                 });
@@ -147,6 +180,12 @@ const TemplateBuilder = () => {
             return;
         }
 
+        // Ensure sector is set for non-admins if it's empty
+        let finalSetor = templateData.setor;
+        if (!isAdmin && !finalSetor && currentUser?.setor) {
+            finalSetor = currentUser.setor;
+        }
+
         setSaving(true);
         try {
             // Determine API URL and Method
@@ -176,8 +215,7 @@ const TemplateBuilder = () => {
             // Backend might still expect 'atividades' array for standard POST route
             // We send BOTH 'dados' (new structure) and 'atividades' (old structure) for compatibility
 
-            // CLONE the data to modify payload structure without affecting state
-            const payload = { ...templateData };
+            const payload = { ...templateData, setor: finalSetor };
 
             // If using the video-upload route, the backend EXPECTS 'dados'.
             if (url.includes('video-upload')) {
@@ -186,7 +224,11 @@ const TemplateBuilder = () => {
                 // and throwing "BSON too large" error.
                 delete payload.template;
             } else {
-                // Standard route: ensure 'template' is set (it is by default in state)
+                // For standard POST creation (e.g. ActivityTemplate generic route)
+                // the API might expect 'setor' in the base, and 'atividades' or 'dados' for the actual content.
+                // We send it as 'template' which maps to 'dados' backend generally.
+                // BUT we MUST make sure 'setor' is not lost. 
+                // The current `payload` includes it because `templateData` does.
             }
 
             const response = await fetch(url, {
@@ -253,6 +295,28 @@ const TemplateBuilder = () => {
                                     <option key={type.tipo} value={type.tipo}>
                                         {type.icon} {type.label}
                                     </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="template-type-selector" style={{ marginTop: '15px' }}>
+                            <label>Setor do Template:</label>
+                            <select
+                                value={templateData.setor}
+                                onChange={(e) => setTemplateData(prev => ({ ...prev, setor: e.target.value }))}
+                                className="tipo-select"
+                                disabled={!isAdmin}
+                                style={{
+                                    width: '100%',
+                                    padding: '10px',
+                                    borderRadius: '6px',
+                                    border: '1px solid #ddd',
+                                    backgroundColor: !isAdmin ? '#f5f5f5' : 'white',
+                                    cursor: !isAdmin ? 'not-allowed' : 'pointer'
+                                }}
+                            >
+                                {isAdmin && <option value="">Sem setor específico (Global)</option>}
+                                {roles.map(r => (
+                                    <option key={r._id} value={r._id}>{r.nome}</option>
                                 ))}
                             </select>
                         </div>

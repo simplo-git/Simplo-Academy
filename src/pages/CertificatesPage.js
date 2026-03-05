@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getUser } from '../auth/auth';
 import Header from './static/components/Header';
 import './static/css/HomePage.css'; // Reusing standard layout styles
 
@@ -13,6 +14,15 @@ const CertificatesPage = () => {
     const [conflictingCerts, setConflictingCerts] = useState([]);
     const [pendingSave, setPendingSave] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [roles, setRoles] = useState([]);
+
+    // Bulk action states
+    const [selectedCertificates, setSelectedCertificates] = useState([]);
+    const [isBulkSectorModalOpen, setIsBulkSectorModalOpen] = useState(false);
+    const [bulkSectorValue, setBulkSectorValue] = useState('');
+
+    const currentUser = getUser();
+    const isAdmin = currentUser?.setor === '69a847c60c6dcf1cde3c2d2d';
 
     const [formData, setFormData] = useState({
         nome: '',
@@ -20,6 +30,7 @@ const CertificatesPage = () => {
         insignia: '',
         carga_horaria: '',
         nivel: 1,
+        setor: '',
         relacionados: [],
         data_criacao: new Date().toISOString().split('T')[0]
     });
@@ -42,7 +53,24 @@ const CertificatesPage = () => {
         }
     };
 
+    const fetchRoles = async () => {
+        try {
+            const response = await fetch('http://192.168.0.17:9000/api/roles');
+            if (response.ok) {
+                const data = await response.json();
+                if (isAdmin) {
+                    setRoles(data);
+                } else if (currentUser?.setor) {
+                    setRoles(data.filter(r => r._id === currentUser.setor));
+                }
+            }
+        } catch (err) {
+            console.error('Erro ao carregar roles:', err);
+        }
+    };
+
     useEffect(() => {
+        fetchRoles();
         fetchCertificates();
     }, []);
 
@@ -55,6 +83,7 @@ const CertificatesPage = () => {
                 insignia: cert.insignia || '',
                 carga_horaria: cert.carga_horaria || '',
                 nivel: cert.nivel || 1,
+                setor: typeof cert.setor === 'object' ? (cert.setor._id || cert.setor.id) : cert.setor || '',
                 relacionados: cert.relacionados || [],
                 data_criacao: cert.data_criacao || new Date().toISOString().split('T')[0]
             });
@@ -67,6 +96,7 @@ const CertificatesPage = () => {
                 insignia: '',
                 carga_horaria: '',
                 nivel: 1,
+                setor: currentUser?.setor && !isAdmin ? currentUser.setor : '',
                 relacionados: [],
                 data_criacao: new Date().toISOString().split('T')[0]
             });
@@ -84,6 +114,7 @@ const CertificatesPage = () => {
             insignia: '',
             carga_horaria: '',
             nivel: 1,
+            setor: '',
             relacionados: [],
             data_criacao: new Date().toISOString().split('T')[0]
         });
@@ -162,6 +193,7 @@ const CertificatesPage = () => {
                     insignia: dataUrl,
                     carga_horaria: '',
                     nivel: 1,
+                    setor: currentUser?.setor && !isAdmin ? currentUser.setor : '',
                     relacionados: [],
                     data_criacao: new Date().toISOString().split('T')[0]
                 };
@@ -438,6 +470,22 @@ const CertificatesPage = () => {
                                 maxWidth: '100%'
                             }}
                         />
+                        {selectedCertificates.length > 0 && isAdmin && (
+                            <button
+                                onClick={() => setIsBulkSectorModalOpen(true)}
+                                style={{
+                                    padding: '10px 20px',
+                                    backgroundColor: '#fd7e14',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold'
+                                }}
+                            >
+                                Atribuir Setor ({selectedCertificates.length})
+                            </button>
+                        )}
                         <input
                             type="file"
                             multiple
@@ -485,6 +533,28 @@ const CertificatesPage = () => {
                         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                             <thead style={{ backgroundColor: '#f4f6f8', borderBottom: '2px solid #ddd' }}>
                                 <tr>
+                                    {isAdmin && (
+                                        <th style={{ padding: '15px', width: '40px' }}>
+                                            <input
+                                                type="checkbox"
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        const allVisibleIds = certificates.filter(cert => {
+                                                            const term = searchTerm.toLowerCase();
+                                                            return cert.nome && cert.nome.toLowerCase().includes(term);
+                                                        }).map(c => c._id);
+                                                        setSelectedCertificates(allVisibleIds);
+                                                    } else {
+                                                        setSelectedCertificates([]);
+                                                    }
+                                                }}
+                                                checked={
+                                                    certificates.length > 0 &&
+                                                    selectedCertificates.length === certificates.filter(cert => cert.nome && cert.nome.toLowerCase().includes(searchTerm.toLowerCase())).length
+                                                }
+                                            />
+                                        </th>
+                                    )}
                                     <th style={{ padding: '15px' }}>Nome</th>
                                     <th style={{ padding: '15px' }}>Nível</th>
                                     <th style={{ padding: '15px' }}>Relacionados</th>
@@ -494,20 +564,57 @@ const CertificatesPage = () => {
                             </thead>
                             <tbody>
                                 {certificates.filter(cert => {
+                                    if (!isAdmin) {
+                                        let certSetorId = null;
+                                        if (cert.setor) {
+                                            certSetorId = typeof cert.setor === 'object' ? (cert.setor._id || cert.setor.id) : cert.setor;
+                                        }
+                                        if (certSetorId !== currentUser?.setor) {
+                                            return false;
+                                        }
+                                    }
+                                    return true;
+                                }).filter(cert => {
                                     const term = searchTerm.toLowerCase();
                                     return cert.nome && cert.nome.toLowerCase().includes(term);
                                 }).length === 0 ? (
                                     <tr>
-                                        <td colSpan="5" style={{ padding: '20px', textAlign: 'center', color: '#888' }}>
+                                        <td colSpan={isAdmin ? "6" : "5"} style={{ padding: '20px', textAlign: 'center', color: '#888' }}>
                                             Nenhum certificado encontrado.
                                         </td>
                                     </tr>
                                 ) : (
                                     certificates.filter(cert => {
+                                        if (!isAdmin) {
+                                            let certSetorId = null;
+                                            if (cert.setor) {
+                                                certSetorId = typeof cert.setor === 'object' ? (cert.setor._id || cert.setor.id) : cert.setor;
+                                            }
+                                            if (certSetorId !== currentUser?.setor) {
+                                                return false;
+                                            }
+                                        }
+                                        return true;
+                                    }).filter(cert => {
                                         const term = searchTerm.toLowerCase();
                                         return cert.nome && cert.nome.toLowerCase().includes(term);
                                     }).map(cert => (
                                         <tr key={cert._id} style={{ borderBottom: '1px solid #eee' }}>
+                                            {isAdmin && (
+                                                <td style={{ padding: '15px' }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedCertificates.includes(cert._id)}
+                                                        onChange={(e) => {
+                                                            if (e.target.checked) {
+                                                                setSelectedCertificates(prev => [...prev, cert._id]);
+                                                            } else {
+                                                                setSelectedCertificates(prev => prev.filter(id => id !== cert._id));
+                                                            }
+                                                        }}
+                                                    />
+                                                </td>
+                                            )}
                                             <td style={{ padding: '15px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                                     {cert.insignia && (
@@ -580,6 +687,9 @@ const CertificatesPage = () => {
                             padding: '25px',
                             borderRadius: '8px',
                             width: '500px',
+                            maxWidth: '90%',
+                            maxHeight: '90vh',
+                            overflowY: 'auto',
                             boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
                         }}>
                             <h3 style={{ marginTop: 0 }}>{editingCertificate ? 'Editar Certificado' : 'Novo Certificado'}</h3>
@@ -681,6 +791,28 @@ const CertificatesPage = () => {
                                     </select>
                                 </div>
 
+                                <div style={{ marginBottom: '15px' }}>
+                                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Setor do Certificado</label>
+                                    <select
+                                        value={formData.setor}
+                                        onChange={(e) => setFormData({ ...formData, setor: e.target.value })}
+                                        disabled={!isAdmin}
+                                        style={{
+                                            width: '100%',
+                                            padding: '8px',
+                                            borderRadius: '4px',
+                                            border: '1px solid #ddd',
+                                            backgroundColor: !isAdmin ? '#f5f5f5' : 'white',
+                                            cursor: !isAdmin ? 'not-allowed' : 'pointer'
+                                        }}
+                                    >
+                                        {isAdmin && <option value="">Sem setor específico (Global)</option>}
+                                        {roles.map(r => (
+                                            <option key={r._id} value={r._id}>{r.nome}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
                                 {/* Certificados Relacionados: Only show when editing */}
                                 {editingCertificate && (
                                     <div style={{ marginBottom: '15px' }}>
@@ -770,6 +902,9 @@ const CertificatesPage = () => {
                             padding: '25px',
                             borderRadius: '8px',
                             width: '450px',
+                            maxWidth: '90%',
+                            maxHeight: '90vh',
+                            overflowY: 'auto',
                             boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
                         }}>
                             <h3 style={{ marginTop: 0, color: '#dc3545' }}>⚠️ Conflito de Níveis</h3>
@@ -834,6 +969,118 @@ const CertificatesPage = () => {
                                     }}
                                 >
                                     Atualizar e Salvar Todos
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Bulk Sector Assignment Modal */}
+                {isBulkSectorModalOpen && (
+                    <div style={{
+                        position: 'fixed',
+                        top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 1200
+                    }}>
+                        <div style={{
+                            backgroundColor: 'white',
+                            padding: '25px',
+                            borderRadius: '8px',
+                            width: '400px',
+                            maxWidth: '90%',
+                            maxHeight: '90vh',
+                            overflowY: 'auto',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                        }}>
+                            <h3 style={{ marginTop: 0 }}>Atribuir Setor em Massa</h3>
+                            <p style={{ fontSize: '0.95rem', color: '#555', marginBottom: '20px' }}>
+                                Selecione o setor para os {selectedCertificates.length} certificados selecionados:
+                            </p>
+
+                            <select
+                                value={bulkSectorValue}
+                                onChange={(e) => setBulkSectorValue(e.target.value)}
+                                style={{
+                                    width: '100%',
+                                    padding: '10px',
+                                    borderRadius: '4px',
+                                    border: '1px solid #ddd',
+                                    marginBottom: '20px'
+                                }}
+                            >
+                                <option value="">Sem setor específico (Global)</option>
+                                {roles.map(r => (
+                                    <option key={r._id} value={r._id}>{r.nome}</option>
+                                ))}
+                            </select>
+
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                                <button
+                                    onClick={() => {
+                                        setIsBulkSectorModalOpen(false);
+                                        setBulkSectorValue('');
+                                    }}
+                                    style={{
+                                        padding: '8px 16px',
+                                        background: '#ddd',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        setLoading(true);
+                                        setIsBulkSectorModalOpen(false);
+                                        try {
+                                            for (const id of selectedCertificates) {
+                                                const cert = certificates.find(c => c._id === id);
+                                                if (cert) {
+                                                    const payload = {
+                                                        nome: cert.nome,
+                                                        descricao: cert.descricao || '',
+                                                        insignia: cert.insignia || '',
+                                                        carga_horaria: cert.carga_horaria || '',
+                                                        nivel: cert.nivel || 1,
+                                                        setor: bulkSectorValue,
+                                                        relacionados: cert.relacionados || [],
+                                                        data_criacao: cert.data_criacao || new Date().toISOString().split('T')[0]
+                                                    };
+
+                                                    await fetch(`http://192.168.0.17:9000/api/certificates/${id}`, {
+                                                        method: 'PUT',
+                                                        headers: { 'Content-Type': 'application/json' },
+                                                        body: JSON.stringify(payload)
+                                                    });
+                                                }
+                                            }
+                                            setSelectedCertificates([]);
+                                            setBulkSectorValue('');
+                                            fetchCertificates();
+                                        } catch (err) {
+                                            console.error("Erro na atribuição em massa:", err);
+                                            alert("Erro ao atribuir setor aos certificados.");
+                                        } finally {
+                                            setLoading(false);
+                                        }
+                                    }}
+                                    style={{
+                                        padding: '8px 16px',
+                                        background: '#007bff',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer',
+                                        fontWeight: 'bold'
+                                    }}
+                                >
+                                    Aplicar
                                 </button>
                             </div>
                         </div>

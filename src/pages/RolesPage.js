@@ -77,6 +77,10 @@ const RolesPage = () => {
     };
 
     const handleDelete = async (id) => {
+        if (id === '69a847c60c6dcf1cde3c2d2d') {
+            alert('O setor "Administrador" não pode ser excluído.');
+            return;
+        }
         if (window.confirm('Tem certeza que deseja excluir este Setor?')) {
             try {
                 const response = await fetch(`http://192.168.0.17:9000/api/roles/${id}`, {
@@ -168,12 +172,14 @@ const RolesPage = () => {
                                                 >
                                                     Editar
                                                 </button>
-                                                <button
-                                                    onClick={() => handleDelete(role._id)}
-                                                    style={{ background: 'none', border: 'none', color: '#dc3545', cursor: 'pointer' }}
-                                                >
-                                                    Excluir
-                                                </button>
+                                                {role._id !== '69a847c60c6dcf1cde3c2d2d' && (
+                                                    <button
+                                                        onClick={() => handleDelete(role._id)}
+                                                        style={{ background: 'none', border: 'none', color: '#dc3545', cursor: 'pointer' }}
+                                                    >
+                                                        Excluir
+                                                    </button>
+                                                )}
                                             </td>
                                         </tr>
                                     ))

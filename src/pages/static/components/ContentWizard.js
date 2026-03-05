@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getUser } from '../../../auth/auth';
 import '../css/ContentWizard.css';
 
 const STEPS = [
@@ -14,6 +15,9 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
     const [currentStep, setCurrentStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [validationError, setValidationError] = useState('');
+
+    const currentUser = getUser();
+    const isAdmin = currentUser?.setor === '69a847c60c6dcf1cde3c2d2d';
 
     // Initial Data State
     const [formData, setFormData] = useState({
@@ -83,7 +87,25 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
 
                 // Fetch Roles (Setores)
                 const rRes = await fetch('http://192.168.0.17:9000/api/roles');
-                if (rRes.ok) setRoles(await rRes.json());
+                if (rRes.ok) {
+                    const allRoles = await rRes.json();
+                    if (isAdmin) {
+                        setRoles(allRoles);
+                    } else if (currentUser?.setor) {
+                        setRoles(allRoles.filter(r => r._id === currentUser.setor));
+                        // Automatically pre-select the user's sector if creating new content
+                        if (!initialData) {
+                            setFormData(prev => {
+                                if (!prev.setores.includes(currentUser.setor)) {
+                                    return { ...prev, setores: [...prev.setores, currentUser.setor] };
+                                }
+                                return prev;
+                            });
+                        }
+                    } else {
+                        setRoles([]);
+                    }
+                }
 
                 // Fetch Certificates
                 const cRes = await fetch('http://192.168.0.17:9000/api/certificates');
@@ -350,6 +372,18 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
                         <div className="selection-grid" style={{ overflowY: 'auto', maxHeight: '400px', alignContent: 'start' }}>
                             {loadingData ? <p>Carregando...</p> : (
                                 templates
+                                    .filter(t => {
+                                        if (!isAdmin) {
+                                            let templateSetorId = null;
+                                            if (t.setor) {
+                                                templateSetorId = typeof t.setor === 'object' ? (t.setor._id || t.setor.id) : t.setor;
+                                            }
+                                            if (templateSetorId !== currentUser?.setor) {
+                                                return false;
+                                            }
+                                        }
+                                        return true;
+                                    })
                                     .filter(t => !formData.conteudos.includes(t._id))
                                     .filter(t => t.nome && t.nome.toLowerCase().includes(templateSearchTerm.toLowerCase()))
                                     .map(t => (
@@ -726,7 +760,18 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
 
                 {/* Available Certificates */}
                 {certificates
-                    .filter(cert => cert.nome && cert.nome.toLowerCase().includes(certSearchTerm.toLowerCase()))
+                    .filter(cert => {
+                        if (!isAdmin) {
+                            let certSetorId = null;
+                            if (cert.setor) {
+                                certSetorId = typeof cert.setor === 'object' ? (cert.setor._id || cert.setor.id) : cert.setor;
+                            }
+                            if (certSetorId !== currentUser?.setor) {
+                                return false;
+                            }
+                        }
+                        return cert.nome && cert.nome.toLowerCase().includes(certSearchTerm.toLowerCase());
+                    })
                     .map(cert => (
                         <div
                             key={cert._id}

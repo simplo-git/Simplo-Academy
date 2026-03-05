@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getUser } from '../auth/auth';
 import Header from './static/components/Header';
 import './static/css/HomePage.css';
 
@@ -9,6 +10,9 @@ const TemplatesPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [filterType, setFilterType] = useState('');
+
+    const currentUser = getUser();
+    const isAdmin = currentUser?.setor === '69a847c60c6dcf1cde3c2d2d';
 
     const activityTypes = [
         { value: '', label: 'Todos os tipos' },
@@ -202,7 +206,23 @@ const TemplatesPage = () => {
                         gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
                         gap: '20px'
                     }}>
-                        {templates.length === 0 ? (
+                        {templates.filter(template => {
+                            if (!isAdmin) {
+                                // Default allowed if missing sector? No, user explicitly requested:
+                                // "so vai listar parar os setor respectivo do usuario"
+                                // Let's try to extract sector ID:
+                                let templateSetorId = null;
+                                if (template.setor) {
+                                    templateSetorId = typeof template.setor === 'object' ? (template.setor._id || template.setor.id) : template.setor;
+                                }
+
+                                // Only match if it strictly matches user's sector
+                                if (templateSetorId !== currentUser?.setor) {
+                                    return false;
+                                }
+                            }
+                            return true;
+                        }).length === 0 ? (
                             <div style={{
                                 gridColumn: '1 / -1',
                                 backgroundColor: 'white',
@@ -232,7 +252,18 @@ const TemplatesPage = () => {
                                 </button>
                             </div>
                         ) : (
-                            templates.map(template => (
+                            templates.filter(template => {
+                                if (!isAdmin) {
+                                    let templateSetorId = null;
+                                    if (template.setor) {
+                                        templateSetorId = typeof template.setor === 'object' ? (template.setor._id || template.setor.id) : template.setor;
+                                    }
+                                    if (templateSetorId !== currentUser?.setor) {
+                                        return false;
+                                    }
+                                }
+                                return true;
+                            }).map(template => (
                                 <div
                                     key={template._id}
                                     style={{

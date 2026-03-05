@@ -6,6 +6,17 @@ const RelatedCertificatesModal = ({ isOpen, onClose, certificateGroup, title }) 
     // Helper to format date
     const formatDate = (dateString) => {
         if (!dateString) return 'Data desconhecida';
+
+        if (typeof dateString === 'string') {
+            const parts = dateString.split('T')[0].split('-');
+            if (parts.length === 3) {
+                const [year, month, day] = parts;
+                if (year && month && day) {
+                    return `${day}/${month}/${year}`;
+                }
+            }
+        }
+
         return new Date(dateString).toLocaleDateString('pt-BR');
     };
 
