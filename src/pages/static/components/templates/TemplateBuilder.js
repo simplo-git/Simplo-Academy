@@ -25,7 +25,7 @@ const TemplateBuilder = () => {
     const [roles, setRoles] = useState([]);
 
     const currentUser = getUser();
-    const isAdmin = currentUser?.setor === '69a847c60c6dcf1cde3c2d2d';
+    const isAdmin = currentUser?.setor === '69a883924e36d6b21869b0ed';
 
     const activityTypes = [
         { tipo: 'multipla_escolha', label: 'Múltipla Escolha', icon: '❓' },

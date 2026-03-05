@@ -436,7 +436,7 @@ const ContentPlayerModal = ({ content, onClose }) => {
                     ) : allActivities.length === 0 ? (
                         <div style={{ alignSelf: 'center' }}>Nenhuma atividade neste conteúdo.</div>
                     ) : (
-                        <div style={{ width: '100%', maxWidth: '900px', padding: '40px', backgroundColor: 'white', minHeight: '100%' }}>
+                        <div style={{ width: '100%', maxWidth: '900px', padding: '40px', backgroundColor: 'white', minHeight: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                             <ActivityRenderer
                                 activity={currentActivity}
                                 contentId={content._id}

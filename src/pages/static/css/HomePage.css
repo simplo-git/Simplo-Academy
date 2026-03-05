@@ -43,16 +43,33 @@ body {
 }
 
 .courses-wrapper {
-    background-color: var(--card-bg);
-    /* Or transparent depending on card design */
+    display: flex;
+    overflow-x: auto;
+    gap: 20px;
     padding: 20px;
+    background-color: var(--card-bg);
+    border: 1px dashed #ccc;
     border-radius: 8px;
     min-height: 100px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #888;
-    border: 1px dashed #ccc;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    /* Hide scrollbar for cleaner look */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+.courses-wrapper::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari and Opera */
+}
+
+.courses-wrapper>* {
+    flex: 0 0 auto;
+    width: 280px;
+    /* Fixed width for standard cards */
+    scroll-snap-align: start;
 }
 
 /* User Menu Dropdown */

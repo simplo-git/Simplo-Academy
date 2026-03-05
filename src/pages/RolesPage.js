@@ -77,7 +77,7 @@ const RolesPage = () => {
     };
 
     const handleDelete = async (id) => {
-        if (id === '69a847c60c6dcf1cde3c2d2d') {
+        if (id === '69a883924e36d6b21869b0ed') {
             alert('O setor "Administrador" não pode ser excluído.');
             return;
         }
@@ -172,7 +172,7 @@ const RolesPage = () => {
                                                 >
                                                     Editar
                                                 </button>
-                                                {role._id !== '69a847c60c6dcf1cde3c2d2d' && (
+                                                {role._id !== '69a883924e36d6b21869b0ed' && (
                                                     <button
                                                         onClick={() => handleDelete(role._id)}
                                                         style={{ background: 'none', border: 'none', color: '#dc3545', cursor: 'pointer' }}

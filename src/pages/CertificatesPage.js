@@ -14,6 +14,7 @@ const CertificatesPage = () => {
     const [conflictingCerts, setConflictingCerts] = useState([]);
     const [pendingSave, setPendingSave] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [relatedSearchTerm, setRelatedSearchTerm] = useState('');
     const [roles, setRoles] = useState([]);
 
     // Bulk action states
@@ -22,7 +23,7 @@ const CertificatesPage = () => {
     const [bulkSectorValue, setBulkSectorValue] = useState('');
 
     const currentUser = getUser();
-    const isAdmin = currentUser?.setor === '69a847c60c6dcf1cde3c2d2d';
+    const isAdmin = currentUser?.setor === '69a883924e36d6b21869b0ed';
 
     const [formData, setFormData] = useState({
         nome: '',
@@ -102,6 +103,7 @@ const CertificatesPage = () => {
             });
             setPreview('');
         }
+        setRelatedSearchTerm('');
         setIsModalOpen(true);
     };
 
@@ -119,6 +121,7 @@ const CertificatesPage = () => {
             data_criacao: new Date().toISOString().split('T')[0]
         });
         setPreview('');
+        setRelatedSearchTerm('');
     };
 
     const processImage = (file) => {
@@ -817,38 +820,55 @@ const CertificatesPage = () => {
                                 {editingCertificate && (
                                     <div style={{ marginBottom: '15px' }}>
                                         <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Certificados Relacionados</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Pesquisar certificados relacionados..."
+                                            value={relatedSearchTerm}
+                                            onChange={(e) => setRelatedSearchTerm(e.target.value)}
+                                            style={{
+                                                width: '100%',
+                                                padding: '8px',
+                                                borderRadius: '4px',
+                                                border: '1px solid #ddd',
+                                                marginBottom: '10px',
+                                                boxSizing: 'border-box'
+                                            }}
+                                        />
                                         <div style={{
                                             border: '1px solid #ddd',
                                             borderRadius: '4px',
-                                            maxHeight: '100px',
+                                            maxHeight: '150px',
                                             overflowY: 'auto',
                                             padding: '10px'
                                         }}>
-                                            {certificates.filter(c => c._id !== editingCertificate?._id).map(cert => (
-                                                <div key={cert._id} style={{ marginBottom: '5px', display: 'flex', alignItems: 'center' }}>
-                                                    <input
-                                                        type="checkbox"
-                                                        id={`rel-${cert._id}`}
-                                                        checked={formData.relacionados?.some(r => (typeof r === 'object' ? r._id === cert._id : r === cert._id))}
-                                                        onChange={(e) => {
-                                                            const isChecked = e.target.checked;
-                                                            let newRelated = [...(formData.relacionados || [])];
-                                                            if (isChecked) {
-                                                                newRelated.push(cert._id);
-                                                            } else {
-                                                                newRelated = newRelated.filter(id => (typeof id === 'object' ? id._id !== cert._id : id !== cert._id));
-                                                            }
-                                                            setFormData({ ...formData, relacionados: newRelated });
-                                                        }}
-                                                        style={{ marginRight: '8px' }}
-                                                    />
-                                                    <label htmlFor={`rel-${cert._id}`} style={{ cursor: 'pointer', fontSize: '0.9rem' }}>
-                                                        {cert.nome}
-                                                    </label>
-                                                </div>
-                                            ))}
-                                            {certificates.length <= 1 && (
-                                                <span style={{ color: '#888', fontStyle: 'italic', fontSize: '0.9rem' }}>Nenhum outro certificado disponível.</span>
+                                            {certificates
+                                                .filter(c => c._id !== editingCertificate?._id)
+                                                .filter(c => c.nome && c.nome.toLowerCase().includes(relatedSearchTerm.toLowerCase()))
+                                                .map(cert => (
+                                                    <div key={cert._id} style={{ marginBottom: '5px', display: 'flex', alignItems: 'center' }}>
+                                                        <input
+                                                            type="checkbox"
+                                                            id={`rel-${cert._id}`}
+                                                            checked={formData.relacionados?.some(r => (typeof r === 'object' ? r._id === cert._id : r === cert._id))}
+                                                            onChange={(e) => {
+                                                                const isChecked = e.target.checked;
+                                                                let newRelated = [...(formData.relacionados || [])];
+                                                                if (isChecked) {
+                                                                    newRelated.push(cert._id);
+                                                                } else {
+                                                                    newRelated = newRelated.filter(id => (typeof id === 'object' ? id._id !== cert._id : id !== cert._id));
+                                                                }
+                                                                setFormData({ ...formData, relacionados: newRelated });
+                                                            }}
+                                                            style={{ marginRight: '8px' }}
+                                                        />
+                                                        <label htmlFor={`rel-${cert._id}`} style={{ cursor: 'pointer', fontSize: '0.9rem' }}>
+                                                            {cert.nome}
+                                                        </label>
+                                                    </div>
+                                                ))}
+                                            {certificates.filter(c => c._id !== editingCertificate?._id).filter(c => c.nome && c.nome.toLowerCase().includes(relatedSearchTerm.toLowerCase())).length === 0 && (
+                                                <span style={{ color: '#888', fontStyle: 'italic', fontSize: '0.9rem' }}>Nenhum certificado encontrado.</span>
                                             )}
                                         </div>
                                     </div>

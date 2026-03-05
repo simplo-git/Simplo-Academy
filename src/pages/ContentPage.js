@@ -18,7 +18,7 @@ const ContentPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
 
     const currentUser = getUser();
-    const isAdmin = currentUser?.setor === '69a847c60c6dcf1cde3c2d2d';
+    const isAdmin = currentUser?.setor === '69a883924e36d6b21869b0ed';
 
     // Fetch Contents
     const fetchContents = async () => {
@@ -168,9 +168,9 @@ const ContentPage = () => {
                                 {contents.filter(content => {
                                     // Restrict visibility by sector
                                     if (!isAdmin) {
-                                        const contentSetoresIds = content.setores
-                                            ? content.setores.map(s => typeof s === 'object' ? s._id || s.id : s)
-                                            : (content.setor ? [typeof content.setor === 'object' ? content.setor._id || content.setor.id : content.setor] : []);
+                                        const rawSetores = content.setores || content.setor || [];
+                                        const contentSetoresIds = (Array.isArray(rawSetores) ? rawSetores : [rawSetores])
+                                            .map(s => typeof s === 'object' ? s._id || s.id : s);
 
                                         if (!contentSetoresIds.includes(currentUser?.setor) && currentUser?.setor) {
                                             return false;
@@ -189,9 +189,9 @@ const ContentPage = () => {
                                 ) : (
                                     contents.filter(content => {
                                         if (!isAdmin) {
-                                            const contentSetoresIds = content.setores
-                                                ? content.setores.map(s => typeof s === 'object' ? s._id || s.id : s)
-                                                : (content.setor ? [typeof content.setor === 'object' ? content.setor._id || content.setor.id : content.setor] : []);
+                                            const rawSetores = content.setores || content.setor || [];
+                                            const contentSetoresIds = (Array.isArray(rawSetores) ? rawSetores : [rawSetores])
+                                                .map(s => typeof s === 'object' ? s._id || s.id : s);
 
                                             if (!contentSetoresIds.includes(currentUser?.setor) && currentUser?.setor) {
                                                 return false;

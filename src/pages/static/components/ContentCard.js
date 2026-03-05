@@ -108,14 +108,14 @@ const ContentCard = ({ content, onClick }) => {
                 overflow: 'hidden',
                 flexShrink: 0
             }}>
-                {/* Case 1: Video or Custom Thumbnail */}
-                {(templateData.thumbnail || (isVideo && (templateData.url || templateData.arquivo))) ? (
+                {/* Case 1: Video or Custom Thumbnail or Content Thumbnail */}
+                {(content.thumbnail || templateData.thumbnail || (isVideo && (templateData.url || templateData.arquivo))) ? (
                     <>
-                        {templateData.thumbnail ? (
+                        {content.thumbnail || templateData.thumbnail ? (
                             <div style={{
                                 width: '100%',
                                 height: '100%',
-                                backgroundImage: `url(${templateData.thumbnail})`,
+                                backgroundImage: `url(${content.thumbnail || templateData.thumbnail})`,
                                 backgroundSize: 'cover',
                                 backgroundPosition: 'center'
                             }}></div>

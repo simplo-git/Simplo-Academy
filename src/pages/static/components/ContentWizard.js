@@ -17,7 +17,7 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
     const [validationError, setValidationError] = useState('');
 
     const currentUser = getUser();
-    const isAdmin = currentUser?.setor === '69a847c60c6dcf1cde3c2d2d';
+    const isAdmin = currentUser?.setor === '69a883924e36d6b21869b0ed';
 
     // Initial Data State
     const [formData, setFormData] = useState({
@@ -28,8 +28,41 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
         nivel: 1,
         usuarios: {}, // Dict[id, {realizado, nota, ...}]
         correcao: 'manual', // default
-        certificado_id: null // Opcional
+        certificado_id: null, // Opcional
+        thumbnail: ''
     });
+
+    const [thumbnailError, setThumbnailError] = useState('');
+
+    const handleThumbnailChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setThumbnailError('');
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                const REQUIRED_WIDTH = 800;
+                const REQUIRED_HEIGHT = 450;
+                const MARGIN = 100;
+
+                if (
+                    Math.abs(img.width - REQUIRED_WIDTH) > MARGIN ||
+                    Math.abs(img.height - REQUIRED_HEIGHT) > MARGIN
+                ) {
+                    setThumbnailError(`A imagem deve ter em torno de ${REQUIRED_WIDTH}x${REQUIRED_HEIGHT} pixels (margem de ±${MARGIN}px). O tamanho atual é ${img.width}x${img.height}.`);
+                    return;
+                }
+
+                setFormData(prev => ({ ...prev, thumbnail: event.target.result }));
+            };
+            img.onerror = () => setThumbnailError('Falha ao ler a imagem.');
+            img.src = event.target.result;
+        };
+        reader.onerror = () => setThumbnailError('Erro ao ler o arquivo.');
+        reader.readAsDataURL(file);
+    };
 
     // Fetched Data
     const [templates, setTemplates] = useState([]);
@@ -67,7 +100,8 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
                 nivel: initialData.nivel || 1,
                 usuarios: initialData.usuarios || {},
                 correcao: initialData.correcao || 'manual',
-                certificado_id: initialData.certificado_id || null
+                certificado_id: initialData.certificado_id || null,
+                thumbnail: initialData.thumbnail || ''
             });
         }
     }, [initialData]);
@@ -256,6 +290,59 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
                 />
                 <div style={{ fontSize: '0.8rem', color: formData.descricao.length >= 5 ? 'green' : '#dc3545', marginTop: '4px' }}>
                     {formData.descricao.length < 5 ? `Faltam ${5 - formData.descricao.length} caracteres no mínimo.` : 'Mínimo de caracteres atingido.'}
+                </div>
+            </div>
+            <div className="form-group">
+                <label className="form-label">Capa (Thumbnail) <span style={{ color: '#888', fontSize: '0.85rem', fontWeight: 'normal' }}>(Opcional - visual para a Home)</span></label>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', flexDirection: 'column' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleThumbnailChange}
+                            style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '0.85rem' }}
+                        />
+                        {thumbnailError && <div style={{ color: '#dc3545', fontSize: '0.8rem', fontWeight: 'bold' }}>{thumbnailError}</div>}
+                        <span style={{ fontSize: '0.75rem', color: '#999' }}>Recomendado: 800×450px (±100px)</span>
+                    </div>
+                    {formData.thumbnail && (
+                        <div style={{
+                            position: 'relative',
+                            width: '120px',
+                            minWidth: '120px',
+                            height: '68px',
+                            borderRadius: '6px',
+                            overflow: 'hidden',
+                            border: '2px solid #e0e0e0',
+                            boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
+                            flexShrink: 0
+                        }}>
+                            <img src={formData.thumbnail} alt="Capa" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <button
+                                type="button"
+                                onClick={() => setFormData(prev => ({ ...prev, thumbnail: '' }))}
+                                style={{
+                                    position: 'absolute',
+                                    top: '2px',
+                                    right: '2px',
+                                    width: '18px',
+                                    height: '18px',
+                                    borderRadius: '50%',
+                                    border: 'none',
+                                    background: 'rgba(0,0,0,0.6)',
+                                    color: 'white',
+                                    fontSize: '0.65rem',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    lineHeight: 1,
+                                    padding: 0
+                                }}
+                                title="Remover capa"
+                            >✕</button>
+                        </div>
+                    )}
                 </div>
             </div>
             <div className="form-group">
@@ -797,7 +884,7 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
 
     // Determines validity of current step (simple validation)
     const isStepValid = () => {
-        if (currentStep === 1) return formData.nome.length > 3 && formData.descricao.length > 5;
+        if (currentStep === 1) return formData.nome.length > 3 && formData.descricao.length > 5 && formData.setores.length > 0;
         if (currentStep === 2) return formData.conteudos.length > 0;
         return true; // Other steps have defaults or are optional selections
     };
