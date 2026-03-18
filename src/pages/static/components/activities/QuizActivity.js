@@ -66,7 +66,7 @@ const QuizActivity = ({ data, context, currentAnswer, onActivityCompleted }) => 
         });
 
         const grade = questoes.length > 0 ? (correctCount / questoes.length) * 100 : 0;
-        const correctness = grade > 0; // We define correctness as having at least some correct
+        const correctness = grade >= 70; // Aprovado com mínimo de 70% de acertos
         setIsCorrect(correctness);
 
         const payload = {
@@ -120,14 +120,25 @@ const QuizActivity = ({ data, context, currentAnswer, onActivityCompleted }) => 
                     boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
                     border: '1px solid #f0f0f0'
                 }}>
-                    <h3 style={{ marginBottom: '20px', whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>
+                    <div style={{
+                        marginBottom: '20px',
+                        lineHeight: '1.5',
+                        fontSize: '1.2rem',
+                        fontWeight: 'inherit',
+                        wordBreak: 'break-word',
+                        overflowWrap: 'break-word',
+                        whiteSpace: 'normal'
+                    }}>
                         <span style={{ color: '#007bff', marginRight: '10px' }}>{qIndex + 1}.</span>
                         {questao.pergunta ? (
-                            <span dangerouslySetInnerHTML={{ __html: questao.pergunta }} />
+                            <span
+                                dangerouslySetInnerHTML={{ __html: questao.pergunta }}
+                                style={{ display: 'inline-block', maxWidth: '100%', verticalAlign: 'top' }}
+                            />
                         ) : (
                             <span>Selecione a resposta correta:</span>
                         )}
-                    </h3>
+                    </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         {questao.opcoes && questao.opcoes.map((op, idx) => {
@@ -184,11 +195,12 @@ const QuizActivity = ({ data, context, currentAnswer, onActivityCompleted }) => 
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
-                                        backgroundColor: isSelected ? (submitted ? borderColor : '#007bff') : 'transparent'
+                                        backgroundColor: isSelected ? (submitted ? borderColor : '#007bff') : 'transparent',
+                                        flexShrink: 0
                                     }}>
                                         {isSelected && <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'white' }}></span>}
                                     </div>
-                                    <span style={{ flex: 1 }}>{opText}</span>
+                                    <span style={{ flex: 1, wordBreak: 'break-word', overflowWrap: 'break-word', whiteSpace: 'normal', textAlign: 'left' }}>{opText}</span>
                                 </button>
                             );
                         })}
@@ -210,7 +222,7 @@ const QuizActivity = ({ data, context, currentAnswer, onActivityCompleted }) => 
                         cursor: (!isAllAnswered() || submitting) ? 'not-allowed' : 'pointer',
                         width: '100%',
                         fontSize: '1.1rem',
-                        fontWeight: 'bold',
+                        fontWeight: 'inherit',
                         transition: 'backgroundColor 0.3s'
                     }}
                 >
@@ -227,11 +239,16 @@ const QuizActivity = ({ data, context, currentAnswer, onActivityCompleted }) => 
                     border: `1px solid ${isCorrect ? '#c3e6cb' : '#f5c6cb'}`
                 }}>
                     <strong style={{ fontSize: '1.2rem' }}>
-                        {isCorrect ? 'Bom trabalho!' : 'Você pode melhorar!'}
+                        {isCorrect ? '🎉 Parabéns, você foi aprovado!' : '😔 Você não atingiu a nota mínima'}
                     </strong>
                     <div style={{ marginTop: '10px', fontSize: '1rem' }}>
-                        Pontuação Obtida: <strong>{(currentAnswer?.nota) ? Number(currentAnswer.nota).toFixed(1) : (isCorrect ? '100' : '0')}</strong> de 100
+                        Pontuação Obtida: <strong>{(currentAnswer?.nota) ? Number(currentAnswer.nota).toFixed(1) : (isCorrect ? '100' : '0')}</strong> de 100 (mínimo: 70)
                     </div>
+                    {!isCorrect && (
+                        <div style={{ marginTop: '10px', fontSize: '0.9rem', color: '#856404', backgroundColor: '#fff3cd', padding: '10px', borderRadius: '6px', border: '1px solid #ffc107' }}>
+                            Você poderá refazer a avaliação após revisão do conteúdo.
+                        </div>
+                    )}
                 </div>
             )}
         </div>

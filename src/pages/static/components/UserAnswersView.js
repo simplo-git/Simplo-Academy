@@ -187,9 +187,17 @@ const UserAnswersView = ({ content, user, onClose, onReset, onUpdate }) => {
                                             )}
                                         </td>
                                         <td style={{ padding: '10px', textAlign: 'center' }}>
-                                            {ans.correta === true ? <span style={{ color: 'green' }}>✓</span> :
-                                                ans.correta === false ? <span style={{ color: 'red' }}>✗</span> :
-                                                    <span style={{ color: '#aaa' }}>-</span>}
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
+                                                {ans.correta === true || (ans.tipo === 'multipla_escolha' && ans.nota > 0) ? <span style={{ color: 'green' }}>✓</span> :
+                                                    ans.correta === false || (ans.tipo === 'multipla_escolha' && ans.nota === 0) ? <span style={{ color: 'red' }}>✗</span> :
+                                                        <span style={{ color: '#aaa' }}>-</span>}
+
+                                                {ans.tipo === 'multipla_escolha' && ans.nota !== undefined && ans.nota !== null && (
+                                                    <span style={{ fontSize: '0.85rem', fontWeight: 'bold', backgroundColor: '#f8f9fa', padding: '2px 6px', borderRadius: '4px', border: '1px solid #ddd' }}>
+                                                        {Number(ans.nota).toFixed(1)}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </td>
                                         <td style={{ padding: '10px', textAlign: 'center', color: '#888', fontSize: '0.8rem' }}>
                                             {ans.data_resposta ? new Date(ans.data_resposta).toLocaleTimeString() : '-'}

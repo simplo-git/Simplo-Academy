@@ -473,7 +473,7 @@ const CertificatesPage = () => {
                                 maxWidth: '100%'
                             }}
                         />
-                        {selectedCertificates.length > 0 && isAdmin && (
+                        {selectedCertificates.length > 0 && (
                             <button
                                 onClick={() => setIsBulkSectorModalOpen(true)}
                                 style={{
@@ -1033,7 +1033,13 @@ const CertificatesPage = () => {
                                 }}
                             >
                                 <option value="">Sem setor específico (Global)</option>
-                                {roles.map(r => (
+                                {roles.filter(r => {
+                                    if (isAdmin) return true;
+                                    const userSetoresIds = Array.isArray(currentUser?.setores)
+                                        ? currentUser.setores.map(s => typeof s === 'object' ? s._id || s.id : s)
+                                        : (currentUser?.setor ? [currentUser.setor] : []);
+                                    return userSetoresIds.includes(r._id);
+                                }).map(r => (
                                     <option key={r._id} value={r._id}>{r.nome}</option>
                                 ))}
                             </select>

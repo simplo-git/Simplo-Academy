@@ -54,14 +54,6 @@ const TextActivity = ({ data, onAnswer, currentAnswer, activityId }) => {
                 <div dangerouslySetInnerHTML={{ __html: questionText }} />
             </div>
 
-            {/* Guidance / Instructions */}
-            {orientacoes && (
-                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#e9ecef', borderRadius: '5px', fontSize: '0.9rem', color: '#555' }}>
-                    <strong>Orientações:</strong>
-                    <p style={{ margin: '5px 0 0 0' }}>{orientacoes}</p>
-                </div>
-            )}
-
             {/* Answer Input */}
             {!submitted ? (
                 <div style={{ marginTop: '30px' }}>

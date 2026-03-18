@@ -54,6 +54,24 @@ const ArticleActivity = ({ data, onAnswer, activityId, currentAnswer }) => {
         }
     };
 
+    // Auto-complete if content is too short to scroll
+    useEffect(() => {
+        if (isCompleted || !contentRef.current) return;
+
+        // Timeout to ensure content has rendered and layout calculation is done
+        const checkShortContent = setTimeout(() => {
+            if (contentRef.current) {
+                const { scrollHeight, clientHeight } = contentRef.current;
+                // If the entire content fits within the view (no scrollbar needed)
+                if (scrollHeight <= clientHeight + 10) {
+                    handleCompletion('Leitura concluída (Texto Curto)');
+                }
+            }
+        }, 500);
+
+        return () => clearTimeout(checkShortContent);
+    }, [isCompleted, data.conteudo]);
+
     const handleCompletion = (reason) => {
         if (isCompleted) return;
         setIsCompleted(true);

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Header from './static/components/Header';
 import './static/css/HomePage.css'; // Reusing standard layout styles
+import { getUser } from '../auth/auth';
+
+const ADMIN_SECTOR_ID = '69a883924e36d6b21869b0ed';
 
 const RolesPage = () => {
     const [roles, setRoles] = useState([]);
@@ -11,12 +14,19 @@ const RolesPage = () => {
     const [formData, setFormData] = useState({ nome: '' });
     const [searchTerm, setSearchTerm] = useState('');
 
+    const currentUser = getUser();
+    const isAdmin = currentUser?.setor === ADMIN_SECTOR_ID;
+
     // Fetch Roles
     const fetchRoles = async () => {
         try {
             const response = await fetch('http://192.168.0.17:9000/api/roles');
             if (response.ok) {
-                const data = await response.json();
+                let data = await response.json();
+                // Non-admin users only see their own sector
+                if (!isAdmin && currentUser?.setor) {
+                    data = data.filter(role => role._id === currentUser.setor);
+                }
                 setRoles(data);
             } else {
                 setError('Failed to fetch roles');
@@ -77,7 +87,7 @@ const RolesPage = () => {
     };
 
     const handleDelete = async (id) => {
-        if (id === '69a883924e36d6b21869b0ed') {
+        if (id === ADMIN_SECTOR_ID) {
             alert('O setor "Administrador" não pode ser excluído.');
             return;
         }
@@ -172,7 +182,7 @@ const RolesPage = () => {
                                                 >
                                                     Editar
                                                 </button>
-                                                {role._id !== '69a883924e36d6b21869b0ed' && (
+                                                {role._id !== ADMIN_SECTOR_ID && (
                                                     <button
                                                         onClick={() => handleDelete(role._id)}
                                                         style={{ background: 'none', border: 'none', color: '#dc3545', cursor: 'pointer' }}

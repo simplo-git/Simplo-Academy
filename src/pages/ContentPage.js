@@ -16,6 +16,7 @@ const ContentPage = () => {
     const [editingContent, setEditingContent] = useState(null);
     const [trackingContent, setTrackingContent] = useState(null); // State for tracking modal
     const [searchTerm, setSearchTerm] = useState('');
+    const [filterCorrecao, setFilterCorrecao] = useState('');
 
     const currentUser = getUser();
     const isAdmin = currentUser?.setor === '69a883924e36d6b21869b0ed';
@@ -113,10 +114,25 @@ const ContentPage = () => {
                                 padding: '10px 15px',
                                 borderRadius: '4px',
                                 border: '1px solid #ccc',
-                                width: '300px',
+                                width: '250px',
                                 maxWidth: '100%'
                             }}
                         />
+                        <select
+                            value={filterCorrecao}
+                            onChange={(e) => setFilterCorrecao(e.target.value)}
+                            style={{
+                                padding: '10px 15px',
+                                borderRadius: '4px',
+                                border: '1px solid #ccc',
+                                backgroundColor: 'white',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            <option value="">Todas as Correções</option>
+                            <option value="automatica">Automática</option>
+                            <option value="manual">Manual</option>
+                        </select>
                         <button
                             onClick={() => { setEditingContent(null); setIsWizardOpen(true); }}
                             style={{
@@ -178,7 +194,10 @@ const ContentPage = () => {
                                     }
 
                                     const term = searchTerm.toLowerCase();
-                                    return content.nome && content.nome.toLowerCase().includes(term);
+                                    const matchSearch = content.nome && content.nome.toLowerCase().includes(term);
+                                    const matchCorrecao = filterCorrecao === '' || content.correcao === filterCorrecao;
+
+                                    return matchSearch && matchCorrecao;
                                 }).length === 0 ? (
                                     <tr>
                                         <td colSpan="5" style={{ padding: '40px', textAlign: 'center', color: '#888' }}>
@@ -199,7 +218,10 @@ const ContentPage = () => {
                                         }
 
                                         const term = searchTerm.toLowerCase();
-                                        return content.nome && content.nome.toLowerCase().includes(term);
+                                        const matchSearch = content.nome && content.nome.toLowerCase().includes(term);
+                                        const matchCorrecao = filterCorrecao === '' || content.correcao === filterCorrecao;
+
+                                        return matchSearch && matchCorrecao;
                                     }).map(content => (
                                         <tr key={content._id} style={{ borderBottom: '1px solid #eee' }}>
                                             <td style={{ padding: '15px' }}>

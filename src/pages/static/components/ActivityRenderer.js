@@ -27,20 +27,20 @@ const ActivityRenderer = ({ activity, onAnswer, contentId, userId, currentAnswer
 
     switch (activity.tipo) {
         case 'video':
-            return <VideoActivity {...props} />;
+            return <VideoActivity key={activity._id} {...props} />;
         case 'texto_livre':
-            return <TextActivity {...props} />;
+            return <TextActivity key={activity._id} {...props} />;
         case 'artigo':
-            return <ArticleActivity {...props} />;
+            return <ArticleActivity key={activity._id} {...props} />;
         case 'multipla_escolha':
-            return <QuizActivity {...props} />;
+            return <QuizActivity key={activity._id} {...props} />;
         case 'upload':
-            return <UploadActivity {...props} />;
+            return <UploadActivity key={activity._id} {...props} />;
         case 'documento':
         case 'document': // Fallback for various naming
-            return <DocumentActivity {...props} />;
+            return <DocumentActivity key={activity._id} {...props} />;
         default:
-            return <GenericActivity type={activity.tipo} data={activity.data || activity} />;
+            return <GenericActivity key={activity._id} type={activity.tipo} data={activity.data || activity} />;
     }
 };
 

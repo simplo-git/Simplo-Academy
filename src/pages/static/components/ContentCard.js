@@ -176,18 +176,17 @@ const ContentCard = ({ content, onClick }) => {
 
                 {/* Title and Level */}
                 <div style={{ marginBottom: '10px' }}>
-                    <h3 style={{
-                        margin: '0 0 5px 0',
-                        fontSize: '1rem',
-                        color: '#333',
-                        paddingRight: isCompleted ? '20px' : '0',
-                        lineHeight: '1.4',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        display: 'block'
-                    }}>
-                        {content.nome}
+                    <h3
+                        title={content.nome}
+                        style={{
+                            margin: '0 0 5px 0',
+                            fontSize: '1rem',
+                            color: '#333',
+                            paddingRight: isCompleted ? '20px' : '0',
+                            lineHeight: '1.4',
+                            display: 'block'
+                        }}>
+                        {content.nome?.length > 48 ? content.nome.substring(0, 48) + '...' : content.nome}
                     </h3>
                     <span style={{
                         fontSize: '0.7rem',
@@ -201,18 +200,20 @@ const ContentCard = ({ content, onClick }) => {
                 </div>
 
                 {/* Description */}
-                <p style={{
-                    margin: 0,
-                    fontSize: '0.85rem',
-                    color: '#666',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    display: '-webkit-box',
-                    WebkitLineClamp: 3, // Allow 3 lines
-                    WebkitBoxOrient: 'vertical',
-                    marginBottom: '10px',
-                    lineHeight: '1.4'
-                }}>
+                <p
+                    title={content.descricao || (firstTemplate ? (firstTemplate.descricao || templateData.descricao) : 'Sem descrição')}
+                    style={{
+                        margin: 0,
+                        fontSize: '0.85rem',
+                        color: '#666',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 3, // Allow 3 lines
+                        WebkitBoxOrient: 'vertical',
+                        marginBottom: '10px',
+                        lineHeight: '1.4'
+                    }}>
                     {content.descricao || (firstTemplate ? (firstTemplate.descricao || templateData.descricao) : 'Sem descrição')}
                 </p>
 

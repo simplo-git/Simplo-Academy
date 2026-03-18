@@ -75,18 +75,19 @@ function HomePage() {
         fetchData();
     }, []);
 
-    // Helper to check if content is assigned to user's sector OR explicitly to the user
+    // Helper to check if content is assigned explicitly to the user
     const isContentForUser = (content) => {
         if (!user) return false;
 
-        // 1. Check if user is explicitly assigned in content.usuarios
-        // user._id is standard, but fallback to user.id just in case
         const userId = user._id || user.id;
-        if (content.usuarios && content.usuarios[userId]) {
-            return true;
+
+        // 1. Check if the user is explicitly assigned in content.usuarios
+        // If content.usuarios is populated, ONLY users in this list should see the content.
+        if (content.usuarios && Object.keys(content.usuarios).length > 0) {
+            return !!content.usuarios[userId];
         }
 
-        // 2. Check if content is assigned to user's sector
+        // 2. Fallback for older content without explicit users: Check if content is assigned to user's sector
         if (!user.setor && !user.setores) return false;
 
         // Handle user.setor being an array of objects (as reported by user) or single object/ID

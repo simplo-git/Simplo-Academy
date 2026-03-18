@@ -632,8 +632,8 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
                     <h3 style={{ margin: 0, color: '#333' }}>Selecione os Usuários</h3>
                     <div style={{ fontSize: '0.9rem', color: '#666', backgroundColor: '#f0f0f0', padding: '5px 10px', borderRadius: '4px' }}>
                         {formData.nivel <= 2 && !initialData
-                            ? "✅ Seleção Automática (Todos do Setor)"
-                            : "👆 Seleção Manual (ou herdada)"}
+                            ? "Seleção Automática (Todos do Setor)"
+                            : "Seleção Manual (ou herdada)"}
                     </div>
                 </div>
 

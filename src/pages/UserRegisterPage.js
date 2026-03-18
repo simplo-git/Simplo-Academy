@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Header from './static/components/Header';
+import { getUser } from '../auth/auth';
 import './static/css/HomePage.css'; // Reusing layout styles
 
 const UserRegisterPage = () => {
@@ -8,10 +9,13 @@ const UserRegisterPage = () => {
     const { id } = useParams(); // Get ID for edit mode
     const isEditMode = !!id;
 
+    const currentUser = getUser();
+    const isGlobalAdmin = currentUser?.setor === '69a883924e36d6b21869b0ed';
+
     const [formData, setFormData] = useState({
         foto: '',
         nome: '',
-        setor: '',
+        setor: (!isEditMode && !isGlobalAdmin) ? currentUser?.setor : '',
         cargo: '',
         dt_adminisao: '',
         phone: '',
@@ -26,6 +30,7 @@ const UserRegisterPage = () => {
     const [preview, setPreview] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
     const [roles, setRoles] = useState([]);
     const [availableCerts, setAvailableCerts] = useState([]);
@@ -151,6 +156,16 @@ const UserRegisterPage = () => {
             return;
         }
 
+        const [year, month, day] = certDate.split('-');
+        const selectedDateLocal = new Date(year, month - 1, day);
+        const todayLocal = new Date();
+        todayLocal.setHours(0, 0, 0, 0);
+
+        if (selectedDateLocal > todayLocal) {
+            alert('A data de conclusão não pode ser superior a data de hoje.');
+            return;
+        }
+
         const newCert = {
             certificate: selectedCert, // Save ID
             data_conclusao: certDate
@@ -251,6 +266,15 @@ const UserRegisterPage = () => {
         color: '#333'
     };
 
+    const getTodayDateString = () => {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+    const todayFormatted = getTodayDateString();
+
     return (
         <div className="home-container">
             <Header />
@@ -279,7 +303,7 @@ const UserRegisterPage = () => {
                                 </div>
                                 <div>
                                     <label style={labelStyle}>Data de Admissão</label>
-                                    <input type="date" name="dt_adminisao" value={formData.dt_adminisao} onChange={handleChange} required style={inputStyle} />
+                                    <input type="date" name="dt_adminisao" value={formData.dt_adminisao} onChange={handleChange} required style={inputStyle} max={todayFormatted} />
                                 </div>
 
                                 {/* Photo Upload Section */}
@@ -339,7 +363,14 @@ const UserRegisterPage = () => {
                             <div>
                                 <div>
                                     <label style={labelStyle}>Setor</label>
-                                    <select name="setor" value={formData.setor} onChange={handleChange} required style={inputStyle}>
+                                    <select
+                                        name="setor"
+                                        value={formData.setor}
+                                        onChange={handleChange}
+                                        required
+                                        style={{ ...inputStyle, backgroundColor: !isGlobalAdmin ? '#f5f5f5' : 'white', cursor: !isGlobalAdmin ? 'not-allowed' : 'pointer' }}
+                                        disabled={!isGlobalAdmin}
+                                    >
                                         <option value="">Selecione um setor...</option>
                                         {roles.map(role => (
                                             <option key={role._id} value={role._id}>
@@ -363,7 +394,13 @@ const UserRegisterPage = () => {
                                 </div>
                                 <div>
                                     <label style={labelStyle}>Tipo de Acesso</label>
-                                    <select name="tipo" value={formData.tipo} onChange={handleChange} style={inputStyle}>
+                                    <select
+                                        name="tipo"
+                                        value={formData.tipo}
+                                        onChange={handleChange}
+                                        style={{ ...inputStyle, backgroundColor: !isGlobalAdmin ? '#f5f5f5' : 'white', cursor: !isGlobalAdmin ? 'not-allowed' : 'pointer' }}
+                                        disabled={!isGlobalAdmin}
+                                    >
                                         <option value="colaborador">Colaborador</option>
                                         <option value="administrador">Administrador</option>
                                     </select>
@@ -378,7 +415,47 @@ const UserRegisterPage = () => {
                                 {/* Removed inline certificate section */}
                                 <div>
                                     <label style={labelStyle}>Senha {isEditMode && '(Deixe em branco para manter)'}</label>
-                                    <input type="password" name="password" value={formData.password} onChange={handleChange} required={!isEditMode} style={inputStyle} />
+                                    <div style={{ position: 'relative', marginTop: '5px', marginBottom: '15px' }}>
+                                        <input
+                                            type={showPassword ? "text" : "password"}
+                                            name="password"
+                                            value={formData.password}
+                                            onChange={handleChange}
+                                            required={!isEditMode}
+                                            style={{ ...inputStyle, paddingRight: '40px', margin: 0 }}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            style={{
+                                                position: 'absolute',
+                                                right: '10px',
+                                                top: '50%',
+                                                transform: 'translateY(-50%)',
+                                                background: 'none',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                                color: '#666',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                padding: 0
+                                            }}
+                                            title={showPassword ? "Ocultar senha" : "Ver senha"}
+                                        >
+                                            {showPassword ? (
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                                </svg>
+                                            ) : (
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                                    <circle cx="12" cy="12" r="3"></circle>
+                                                </svg>
+                                            )}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -459,7 +536,16 @@ const UserRegisterPage = () => {
                                     style={inputStyle}
                                 >
                                     <option value="">Selecione um certificado...</option>
-                                    {availableCerts.map(cert => (
+                                    {availableCerts.filter(cert => {
+                                        if (isGlobalAdmin) return true;
+
+                                        // Filtra os certificados disponíveis permitindo apenas os que pertencem ao setor do usuário atual
+                                        let certSetorId = null;
+                                        if (cert.setor) {
+                                            certSetorId = typeof cert.setor === 'object' ? (cert.setor._id || cert.setor.id) : cert.setor;
+                                        }
+                                        return certSetorId === currentUser?.setor;
+                                    }).map(cert => (
                                         <option key={cert._id} value={cert._id}>{cert.nome}</option>
                                     ))}
                                 </select>
@@ -469,6 +555,7 @@ const UserRegisterPage = () => {
                                         value={certDate}
                                         onChange={(e) => setCertDate(e.target.value)}
                                         style={{ ...inputStyle, marginBottom: 0, flex: 1 }}
+                                        max={todayFormatted}
                                     />
                                     <button
                                         type="button"

@@ -3,12 +3,14 @@ import React, { useState, useEffect } from 'react';
 const VideoActivity = ({ data, context, currentAnswer, onActivityCompleted }) => {
     const [completed, setCompleted] = useState(false);
 
-    // Check if already completed previously
+    // Reset state when activity changes, and check if already completed
     useEffect(() => {
-        if (currentAnswer) {
+        if (currentAnswer && currentAnswer.template_id === context.templateId) {
             setCompleted(true);
+        } else {
+            setCompleted(false);
         }
-    }, [currentAnswer]);
+    }, [currentAnswer, context.templateId]);
 
     const videoUrl = data.url || (data.dados && data.dados.url);
 
@@ -94,7 +96,7 @@ const VideoActivity = ({ data, context, currentAnswer, onActivityCompleted }) =>
                 </p>
             )}
 
-            {data.descricao && <div style={{ marginTop: '15px', color: '#555' }} dangerouslySetInnerHTML={{ __html: data.descricao }} />}
+            {data.descricao && <div style={{ marginTop: '15px', color: '#555', width: '100%', wordWrap: 'break-word', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }} dangerouslySetInnerHTML={{ __html: data.descricao }} />}
         </div>
     );
 };

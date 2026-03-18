@@ -389,7 +389,10 @@ const ContentPlayerModal = ({ content, onClose }) => {
                                 <>
                                     <div style={{ fontSize: '5rem', marginBottom: '20px' }}>😔</div>
                                     <h2 style={{ color: '#dc3545', marginBottom: '10px', fontSize: '2rem' }}>Não foi dessa vez!</h2>
-                                    <p style={{ fontSize: '1.2rem', color: '#555', marginBottom: '20px' }}>Você concluiu o conteúdo, mas não alcançou a nota necessária. Sua nota foi <strong>{completionData.nota}</strong>.</p>
+                                    <p style={{ fontSize: '1.2rem', color: '#555', marginBottom: '10px' }}>Você concluiu o conteúdo, mas não alcançou a nota mínima de <strong>70%</strong>. Sua nota foi <strong>{completionData.nota}</strong>.</p>
+                                    <div style={{ marginTop: '10px', padding: '15px', backgroundColor: '#fff3cd', borderRadius: '8px', border: '1px solid #ffc107', color: '#856404', fontSize: '1rem' }}>
+                                        📚 Você poderá refazer a avaliação após revisão do conteúdo.
+                                    </div>
                                 </>
                             ) : completionData?.final_status === 'aguardando correção' ? (
                                 <>

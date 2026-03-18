@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getUser, logout } from '../../../auth/auth'; // Import auth utils
 import './Header.css';
@@ -8,6 +8,20 @@ const Header = () => {
     const navigate = useNavigate();
     const [user] = useState(getUser()); // Use getUser() utility
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const menuRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (menuRef.current && !menuRef.current.contains(event.target)) {
+                setIsMenuOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     const handleLogout = () => {
         logout(); // Use logout() utility
@@ -32,7 +46,7 @@ const Header = () => {
                 {/* Menu de navegação de setores */}
             </div>
 
-            <div className="user-menu-container">
+            <div className="user-menu-container" ref={menuRef}>
                 <div id="btn-user-menu" onClick={() => setIsMenuOpen(!isMenuOpen)}>
                     <div className="user-avatar">
                         {user?.foto ? (
@@ -131,7 +145,7 @@ const Header = () => {
                             borderTop: '1px solid #eee',
                             marginTop: '5px'
                         }}>
-                            V-0.0.6-beta
+                            V-0.0.11-beta
                         </div>
                     </div>
                 )}
