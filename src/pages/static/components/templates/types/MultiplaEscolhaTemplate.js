@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 
 const MultiplaEscolhaTemplate = ({ data, onChange, onRemove, index, hideRemove }) => {
+    const [draggedIndex, setDraggedIndex] = useState(null);
 
     // Backwards compatibility initialization
     useEffect(() => {
@@ -18,6 +19,7 @@ const MultiplaEscolhaTemplate = ({ data, onChange, onRemove, index, hideRemove }
                 ...data,
                 questoes: [
                     {
+                        id: Date.now(),
                         pergunta: '',
                         opcoes: [
                             { texto: '', correta: false },
@@ -74,7 +76,11 @@ const MultiplaEscolhaTemplate = ({ data, onChange, onRemove, index, hideRemove }
             alert("O limite máximo de questões neste template é 15.");
             return;
         }
-        const newQuestoes = [...questoes, { pergunta: '', opcoes: [{ texto: '', correta: false }, { texto: '', correta: false }] }];
+        const newQuestoes = [...questoes, { 
+            id: Date.now() + Math.random(),
+            pergunta: '', 
+            opcoes: [{ texto: '', correta: false }, { texto: '', correta: false }] 
+        }];
         onChange(index, { ...data, questoes: newQuestoes });
     };
 
@@ -87,6 +93,34 @@ const MultiplaEscolhaTemplate = ({ data, onChange, onRemove, index, hideRemove }
             const newQuestoes = questoes.filter((_, i) => i !== qIndex);
             onChange(index, { ...data, questoes: newQuestoes });
         }
+    };
+
+    const handleDragStart = (e, qIndex) => {
+        setDraggedIndex(qIndex);
+        e.dataTransfer.effectAllowed = 'move';
+        // Add a class for styling while dragging
+        e.target.style.opacity = '0.4';
+    };
+
+    const handleDragEnd = (e) => {
+        setDraggedIndex(null);
+        e.target.style.opacity = '1';
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    };
+
+    const handleDrop = (e, targetIndex) => {
+        e.preventDefault();
+        if (draggedIndex === null || draggedIndex === targetIndex) return;
+
+        const newQuestoes = [...questoes];
+        const movedItem = newQuestoes.splice(draggedIndex, 1)[0];
+        newQuestoes.splice(targetIndex, 0, movedItem);
+
+        onChange(index, { ...data, questoes: newQuestoes });
     };
 
     if (!data.questoes) return null; // Wait for initialization
@@ -107,16 +141,40 @@ const MultiplaEscolhaTemplate = ({ data, onChange, onRemove, index, hideRemove }
 
             <div className="template-card-body">
                 {questoes.map((questao, qIndex) => (
-                    <div key={qIndex} style={{
-                        border: '1px solid #eee',
-                        padding: '15px',
-                        borderRadius: '8px',
-                        marginBottom: '20px',
-                        backgroundColor: '#fdfdfd',
-                        position: 'relative'
-                    }}>
+                    <div
+                        key={questao.id || qIndex}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, qIndex)}
+                        onDragEnd={handleDragEnd}
+                        onDragOver={handleDragOver}
+                        onDrop={(e) => handleDrop(e, qIndex)}
+                        style={{
+                            border: '1px solid #eee',
+                            padding: '15px',
+                            borderRadius: '8px',
+                            marginBottom: '20px',
+                            backgroundColor: '#fdfdfd',
+                            position: 'relative',
+                            cursor: 'default'
+                        }}
+                    >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                            <h4 style={{ margin: 0, color: '#007bff' }}>Questão {qIndex + 1}</h4>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <div
+                                    title="Arraste para reordenar"
+                                    style={{
+                                        cursor: 'grab',
+                                        color: '#ccc',
+                                        fontSize: '1.2rem',
+                                        userSelect: 'none',
+                                        display: 'flex',
+                                        lineHeight: '1'
+                                    }}
+                                >
+                                    ⋮⋮
+                                </div>
+                                <h4 style={{ margin: 0, color: '#007bff' }}>Questão {qIndex + 1}</h4>
+                            </div>
                             {questoes.length > 1 && (
                                 <button
                                     onClick={() => removeQuestion(qIndex)}

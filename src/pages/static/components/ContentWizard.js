@@ -15,6 +15,7 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
     const [currentStep, setCurrentStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [validationError, setValidationError] = useState('');
+    const [draggedTemplateIndex, setDraggedTemplateIndex] = useState(null);
 
     const currentUser = getUser();
     const isAdmin = currentUser?.setor === '69a883924e36d6b21869b0ed';
@@ -436,6 +437,34 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
             }
         };
 
+        // Drag and Drop handlers for Templates
+        const handleDragStart = (e, idx) => {
+            setDraggedTemplateIndex(idx);
+            e.dataTransfer.effectAllowed = 'move';
+            e.target.style.opacity = '0.4';
+        };
+
+        const handleDragEnd = (e) => {
+            setDraggedTemplateIndex(null);
+            e.target.style.opacity = '1';
+        };
+
+        const handleDragOver = (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        };
+
+        const handleDrop = (e, targetIdx) => {
+            e.preventDefault();
+            if (draggedTemplateIndex === null || draggedTemplateIndex === targetIdx) return;
+
+            const newOrder = [...formData.conteudos];
+            const movedItem = newOrder.splice(draggedTemplateIndex, 1)[0];
+            newOrder.splice(targetIdx, 0, movedItem);
+
+            setFormData({ ...formData, conteudos: newOrder });
+        };
+
         return (
             <div className="step-content">
                 <div style={{ display: 'flex', gap: '2rem', height: '100%' }}>
@@ -506,17 +535,40 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
                                 const t = getTemplate(id);
                                 if (!t) return null;
                                 return (
-                                    <div key={id} style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        padding: '10px',
-                                        backgroundColor: '#f8f9fa',
-                                        border: '1px solid #ddd',
-                                        borderRadius: '8px',
-                                        boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-                                    }}>
+                                    <div
+                                        key={id}
+                                        draggable
+                                        onDragStart={(e) => handleDragStart(e, index)}
+                                        onDragEnd={handleDragEnd}
+                                        onDragOver={handleDragOver}
+                                        onDrop={(e) => handleDrop(e, index)}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            padding: '10px',
+                                            backgroundColor: '#f8f9fa',
+                                            border: '1px solid #ddd',
+                                            borderRadius: '8px',
+                                            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                                            cursor: 'default'
+                                        }}
+                                    >
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <div
+                                                title="Arraste para reordenar"
+                                                style={{
+                                                    cursor: 'grab',
+                                                    color: '#ccc',
+                                                    fontSize: '1.2rem',
+                                                    userSelect: 'none',
+                                                    display: 'flex',
+                                                    lineHeight: '1',
+                                                    paddingRight: '5px'
+                                                }}
+                                            >
+                                                ⋮⋮
+                                            </div>
                                             <span style={{
                                                 fontWeight: 'bold',
                                                 color: '#007bff',
@@ -531,23 +583,11 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
                                             }}>
                                                 {index + 1}
                                             </span>
-                                            <span style={{ fontWeight: '500', fontSize: '0.95rem' }}>{t.nome}</span>
+                                            <span style={{ fontWeight: '500', fontSize: '0.95rem' }}>
+                                                {getTemplateIcon(t.tipo)} {t.nome}
+                                            </span>
                                         </div>
                                         <div style={{ display: 'flex', gap: '5px' }}>
-                                            <button
-                                                onClick={() => moveTemplate(index, -1)}
-                                                disabled={index === 0}
-                                                style={{ border: 'none', background: 'none', cursor: index === 0 ? 'default' : 'pointer', opacity: index === 0 ? 0.3 : 1 }}
-                                            >
-                                                ⬆️
-                                            </button>
-                                            <button
-                                                onClick={() => moveTemplate(index, 1)}
-                                                disabled={index === formData.conteudos.length - 1}
-                                                style={{ border: 'none', background: 'none', cursor: index === formData.conteudos.length - 1 ? 'default' : 'pointer', opacity: index === formData.conteudos.length - 1 ? 0.3 : 1 }}
-                                            >
-                                                ⬇️
-                                            </button>
                                             <button
                                                 onClick={() => toggleTemplate(id)}
                                                 style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#dc3545', marginLeft: '8px' }}
