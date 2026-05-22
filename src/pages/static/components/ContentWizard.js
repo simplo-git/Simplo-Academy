@@ -75,6 +75,7 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
     // Search states for wizards
     const [templateSearchTerm, setTemplateSearchTerm] = useState('');
     const [userSearchTerm, setUserSearchTerm] = useState('');
+    const [userLevelFilter, setUserLevelFilter] = useState(''); // New filter state
     const [certSearchTerm, setCertSearchTerm] = useState('');
 
     // Initial Data Effect
@@ -642,7 +643,22 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
             .filter(u => {
                 const userName = u.nome ? u.nome.toLowerCase() : '';
                 const userCargo = u.cargo ? u.cargo.toLowerCase() : 'colaborador';
-                return userName.includes(term) || userCargo.includes(term);
+                const matchSearch = userName.includes(term) || userCargo.includes(term);
+
+                // Map "1" to "Nível 01" / "Nível 1" and "2" to "Nível 02" / "Nível 2"
+                let matchLevel = true;
+                if (userLevelFilter !== '') {
+                    const uLevel = String(u.nivel || '');
+                    if (userLevelFilter === '1') {
+                        matchLevel = uLevel.includes('Nível 01') || uLevel.includes('Nível 1');
+                    } else if (userLevelFilter === '2') {
+                        matchLevel = uLevel.includes('Nível 02') || uLevel.includes('Nível 2');
+                    } else {
+                        matchLevel = uLevel === userLevelFilter;
+                    }
+                }
+
+                return matchSearch && matchLevel;
             });
 
         const selectedUserIds = Object.keys(formData.usuarios);
@@ -727,6 +743,24 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
                             border: '1px solid #ccc'
                         }}
                     />
+                    <select
+                        value={userLevelFilter}
+                        onChange={(e) => setUserLevelFilter(e.target.value)}
+                        style={{
+                            padding: '8px 12px',
+                            borderRadius: '4px',
+                            border: '1px solid #ccc',
+                            backgroundColor: 'white',
+                            cursor: 'pointer',
+                            minWidth: '150px'
+                        }}
+                    >
+                        <option value="">Todos os Níveis</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="Qualificado">Qualificado</option>
+                        <option value="Específico">Específico</option>
+                    </select>
                     <button
                         onClick={() => handleSelectAll(!allFilteredSelected)}
                         style={{
@@ -750,7 +784,7 @@ const ContentWizard = ({ onClose, onSuccess, initialData }) => {
                         <small>Volte ao passo 1 para ajustar os setores.</small>
                     </div>
                 ) : (
-                    <div className="user-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '15px', overflowY: 'auto', maxHeight: '300px' }}>
+                    <div className="user-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px))', gap: '15px', overflowY: 'auto', maxHeight: '300px' }}>
                         {filteredUsers.map(u => {
                             const isSelected = !!formData.usuarios[u._id];
                             return (
